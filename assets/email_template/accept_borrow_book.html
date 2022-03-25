@@ -11,16 +11,16 @@
     </head>
     <body>
         <h3>Your order has been accepted</h3>
-        <p>Dear {{.UserName}},</p>
-        <p>Your order at {{.OrderDate}} has been accepted.</p>
+        <p>Dear {{.User.FullName}},</p>
+        <p>Your order has been accepted.</p>
         <p>Here are the books list: </p>
         <ul>
-        {{range .Books}}
-            <li>{{.Title}} by {{.Author}}</li>
+        {{range .Borrows}}
+            <li>{{.Book.Title}} by {{.Book.Author}} borrowed at {{.BorrowDate}}</li>
             <br>
         {{end}}
         </ul>
-        <p>The books in that order will be delivered by {{.CourierName}} at {{.Time}} from {{.Branch.Name}} - {{.Branch.Address}}</p>
+        <p>The books in that order will be delivered by {{.Courier.CourierName}} at {{.CourierCome}} from {{.Branch.Name}} - {{.Branch.Address}}</p>
         <br>
         <h3>Best regards,</h3>
         <br>

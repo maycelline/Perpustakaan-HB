@@ -2,10 +2,12 @@ package main
 
 import (
 	controllers "Tools/controllers"
+	"fmt"
 )
 
 func main() {
 
+	fmt.Println("asu")
 	var data controllers.DataBorrowed
 	data.UserName = "Maycelline"
 	data.CourierName = "Dadang Sudrajat"

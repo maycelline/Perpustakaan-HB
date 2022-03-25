@@ -5,7 +5,6 @@ import (
 )
 
 func main() {
-
 	var data controllers.DataBorrowed
 	data.UserName = "Maycelline"
 	data.CourierName = "Dadang Sudrajat"

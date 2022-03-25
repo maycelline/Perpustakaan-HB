@@ -6,10 +6,11 @@ import (
 
 	"gopkg.in/gomail.v2"
 
+	"Tools/model"
 	"text/template"
 )
 
-func SendRegisterEmail(destinationAddress string, user User) {
+func SendRegisterEmail(destinationAddress string, user model.User) {
 	mail := gomail.NewMessage()
 
 	template := "assets/email_template/register.html"
@@ -28,7 +29,7 @@ func SendRegisterEmail(destinationAddress string, user User) {
 	}
 }
 
-func SendBorrowAcceptedEmail(destinationAddress string, data DataBorrowed) {
+func SendBorrowAcceptedEmail(destinationAddress string, data model.BorrowDataHTML) {
 	mail := gomail.NewMessage()
 
 	template := "assets/email_template/accept_borrow_book.html"
@@ -47,7 +48,7 @@ func SendBorrowAcceptedEmail(destinationAddress string, data DataBorrowed) {
 	}
 }
 
-func SendBorrowRejectedEmail(destinationAddress string, data DataBorrowed) {
+func SendBorrowRejectedEmail(destinationAddress string, data model.BorrowDataHTML) {
 	mail := gomail.NewMessage()
 
 	template := "assets/email_template/reject_borrow_book.html"

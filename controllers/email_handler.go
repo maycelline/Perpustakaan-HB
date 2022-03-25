@@ -47,6 +47,25 @@ func SendBorrowAcceptedEmail(destinationAddress string, data DataBorrowed) {
 	}
 }
 
+func SendBorrowRejectedEmail(destinationAddress string, data DataBorrowed) {
+	mail := gomail.NewMessage()
+
+	template := "assets/email_template/reject_borrow_book.html"
+
+	result, _ := parseTemplate(template, data)
+
+	mail.SetHeader("From", "perpushb@gmail.com")
+	mail.SetHeader("To", destinationAddress)
+	mail.SetHeader("Subject", "Rejected Order")
+	mail.SetBody("text/html", result)
+
+	sender := gomail.NewDialer("smtp.gmail.com", 587, "perpushb@gmail.com", "PerpusHBH1tZ")
+
+	if err := sender.DialAndSend(mail); err != nil {
+		fmt.Println(err)
+	}
+}
+
 //ubah text plain ke dalam bentuk buffer
 func parseTemplate(templateFileName string, data interface{}) (string, error) {
 	// mengubah text html ke dalam bentuk byte

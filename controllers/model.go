@@ -14,9 +14,21 @@ type Courier struct {
 	Email       string `json:"email"`
 }
 
+type Book struct {
+	Title  string
+	Author string
+}
+
+type Branch struct {
+	Name    string
+	Address string
+}
+
 type DataBorrowed struct {
 	UserName    string `json:"username"`
 	OrderDate   string `json:"order_date"`
 	CourierName string `json:"courier_name"`
 	Time        string `json:"time"`
+	Books       []Book `json:"books"`
+	Branch      Branch
 }

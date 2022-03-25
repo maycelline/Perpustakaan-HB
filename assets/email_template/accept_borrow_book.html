@@ -13,14 +13,18 @@
         <h3>Your order has been accepted</h3>
         <p>Dear {{.UserName}},</p>
         <p>Your order at {{.OrderDate}} has been accepted.</p>
-        <p>The books in that order will be delivered by {{.CourierName}} at {{.Time}}</p>
+        <p>Here are the books list: </p>
+        <ul>
+        {{range .Books}}
+            <li>{{.Title}} by {{.Author}}</li>
+            <br>
+        {{end}}
+        </ul>
+        <p>The books in that order will be delivered by {{.CourierName}} at {{.Time}} from {{.Branch.Name}} - {{.Branch.Address}}</p>
         <br>
         <h3>Best regards,</h3>
         <br>
         <br>
         <p>PHB Team</p>
     </body>
-
-
-
 </html>

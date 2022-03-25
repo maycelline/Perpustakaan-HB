@@ -1,43 +1,60 @@
 package main
 
 import (
-	controllers "Tools/controllers"
 	"fmt"
+	"log"
+	"net/http"
+
+	"Perpustakaan-HB/controllers"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
-	var data controllers.DataBorrowed
-	data.UserName = "Maycelline"
-	data.CourierName = "Dadang Sudrajat"
-	data.OrderDate = "20 Mei 2021"
-	data.Time = "19.00"
+	router := mux.NewRouter()
 
-	var book1 controllers.Book
-	book1.Title = "Daun yang jatuh tak pernah membenci angin"
-	book1.Author = "Tere Liye"
+	//EndPoint
+	// router.HandleFunc("/login",).Methods("POST")
+	// router.HandleFunc("/register",).Methods("POST")
+	// router.HandleFunc("/book/popular",).Methods("GET")
+	// router.HandleFunc("/logout",).Methods("POST")
 
-	var book2 controllers.Book
-	book2.Title = "Siksa Kubur"
-	book2.Author = "Testing"
+	//Member
+	// router.HandleFunc("/book/list",).Methods("GET")
+	// router.HandleFunc("/member/cart/{member_id}", ).Methods("GET")
+	// router.HandleFunc("/member/borrowing/checkout/{member_id}", ).Methods("POST")
+	// router.HandleFunc("/member/return/{member_id}",).Methods("GET")
+	router.HandleFunc("/member/profile/{member_id}", controllers.GetAUsers).Methods("GET")
+	// router.HandleFunc("/member/profile/edit/{member_id}",).Methods("PUT")
+	// router.HandleFunc("/member/password/edit/{member_id}",).Methods("PUT")
+	// router.HandleFunc("/member/topup/{member_id}",).Methods("POST")
+	// router.HandleFunc("/member/delete/{member_id}",).Methods("DELETE")
 
-	var book3 controllers.Book
-	book3.Title = "Dear Nathan"
-	book3.Author = "Rintiksedu"
+	//ADMIN
+	// router.HandleFunc("/admin/home").Methods("GET")
+	// router.HandleFunc("/admin/borrowApprove").Methods("GET")
+	// router.HandleFunc("/admin/returnApprove").Methods("GET")
+	// router.HandleFunc("/admin/chooseCourier/{borrow_id}").Methods("PUT")
+	// router.HandleFunc("/admin/caddBook").Methods("POST")
 
-	var books []controllers.Book
-	books = append(books, book1)
-	books = append(books, book2)
-	books = append(books, book3)
-	data.Books = books
+	//OWNER
+	// router.HandleFunc("/owner/home").Methods("GET")
+	// router.HandleFunc("/owner/branchIncome").Methods("GET")
+	// router.HandleFunc("owner/income").Methods("GET")
 
-	var branch controllers.Branch
-	branch.Name = "Cikutra"
-	branch.Address = "Jalan cikutra no 19"
+	//CORS
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowCredentials: true, //kalo ga nanti ga bisa ngakses  karena cookies dkk
+	})
 
-	data.Branch = branch
+	handler := corsHandler.Handler(router)
 
-	fmt.Println(data.Books)
-
-	controllers.SendBorrowAcceptedEmail("maycelinesudarsono@gmail.com", data)
-
+	http.Handle("/", handler)
+	fmt.Println("Connected to port 8080")
+	log.Println("Connected to port 8080")
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }

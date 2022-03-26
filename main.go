@@ -13,11 +13,11 @@ import (
 )
 
 func main() {
-	controllers.WeeklyEmailScheduler()
+	// controllers.WeeklyEmailScheduler()
 
 	router := mux.NewRouter()
 
-	// EndPoint
+	// General
 	router.HandleFunc("/login", controllers.CheckUserLogin).Methods("POST")
 	router.HandleFunc("/register", controllers.CreateUserRegister).Methods("POST")
 	router.HandleFunc("/book/popular", controllers.GetPopularBook).Methods("GET")
@@ -50,7 +50,7 @@ func main() {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
-		AllowCredentials: true, //kalo ga nanti ga bisa ngakses  karena cookies dkk
+		AllowCredentials: true,
 	})
 
 	handler := corsHandler.Handler(router)

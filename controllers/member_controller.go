@@ -1,22 +1,26 @@
 package controllers
 
 import (
-	"net/http"
-
 	"Perpustakaan-HB/model"
-	// "github.com/gorilla/mux"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func GetAUser(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
-	query := "SELECT users.userId, users.fullName, users.userName, users.password, members.balance FROM users JOIN members ON users.userId = members.memberId WHERE members.Id = ?"
+	query := "SELECT users.userId, users.fullName, users.userName, users.password, users.userType, members.balance FROM users JOIN members ON users.userId = members.memberId WHERE members.Id = ?"
 
-	rows := db.QueryRow(query, 1)
+	vars := mux.Vars(r)
+	memberId, _ := strconv.Atoi(vars["member_id"])
 
-	var user model.User
-	if err := rows.Scan(&user.ID, &user.FullName, &user.Username, &user.Password, &user.Balance); err != nil {
+	rows := db.QueryRow(query, memberId)
+
+	var member model.Member
+	if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.Password, &member.User.UserType, &member.Balance); err != nil {
 		// log.Println(err.Error())
 		// response := errorTableField()
 		// w.Header().Set("Content-Type", "application/json")

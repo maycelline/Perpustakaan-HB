@@ -7,7 +7,7 @@ import (
 	// "github.com/gorilla/mux"
 )
 
-func GetAUsers(w http.ResponseWriter, r *http.Request) {
+func GetAUser(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
@@ -30,4 +30,36 @@ func GetAUsers(w http.ResponseWriter, r *http.Request) {
 	// 	response.Data = users
 	// 	w.Header().Set("Content-Type", "application/json")
 	// 	json.NewEncoder(w).Encode((response))
+}
+
+func GetMemberCart(w http.ResponseWriter, r *http.Request) {
+	return
+}
+
+func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
+	return
+}
+
+func GetOngoingBorrowing(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func EditUserProfile(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func EditUserPassword(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func DeleteAccount(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
+
 }

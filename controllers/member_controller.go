@@ -1,10 +1,9 @@
 package controllers
 
 import (
+	"Perpustakaan-HB/model"
 	"net/http"
 	"strconv"
-
-	"Perpustakaan-HB/model"
 
 	"github.com/gorilla/mux"
 )
@@ -13,17 +12,19 @@ func GetAUser(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
-	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?"
+	query := "SELECT users.userId, users.fullName, users.userName, users.password, users.userType, members.balance FROM users JOIN members ON users.userId = members.memberId WHERE members.Id = ?"
 
-	// nanti get cookies memberId?
-	rows := db.QueryRow(query, 6)
+	vars := mux.Vars(r)
+	memberId, _ := strconv.Atoi(vars["member_id"])
 
-	var user model.User
-	if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.Password, &user.Balance); err != nil {
+	rows := db.QueryRow(query, memberId)
+
+	var member model.Member
+	if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.Password, &member.User.UserType, &member.Balance); err != nil {
 		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	} else {
-		sendSuccessResponse(w, "Get Success", user)
+		sendSuccessResponse(w, "Get Success", member)
 	}
 
 	db.Close()
@@ -144,14 +145,14 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	num, _ := result.RowsAffected()
 
-	var user model.User
-	var users []model.User
+	var member model.Member
+	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.Password, &user.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
-			users = append(users, user)
+			members = append(members, member)
 		}
 	}
 
@@ -159,7 +160,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
-			sendSuccessResponse(w, "Update Success", users)
+			sendSuccessResponse(w, "Update Success", members)
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Update")
@@ -190,14 +191,14 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 
 	num, _ := result.RowsAffected()
 
-	var user model.User
-	var users []model.User
+	var member model.Member
+	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.Password, &user.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
-			users = append(users, user)
+			members = append(members, member)
 		}
 	}
 
@@ -205,7 +206,7 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
-			sendSuccessResponse(w, "Update Success", users)
+			sendSuccessResponse(w, "Update Success", members)
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Update")
@@ -238,14 +239,14 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 
 	num, _ := result.RowsAffected()
 
-	var user model.User
-	var users []model.User
+	var member model.Member
+	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.Password, &user.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
-			users = append(users, user)
+			members = append(members, member)
 		}
 	}
 
@@ -253,7 +254,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
-			sendSuccessResponse(w, "Update Success", users)
+			sendSuccessResponse(w, "Update Success", members)
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Update")
@@ -271,14 +272,14 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 
 	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userID)
 
-	var user model.User
-	var users []model.User
+	var member model.Member
+	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.Password, &user.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
-			users = append(users, user)
+			members = append(members, member)
 		}
 	}
 
@@ -290,7 +291,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
-			sendSuccessResponse(w, "Delete Success", users)
+			sendSuccessResponse(w, "Delete Success", members)
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Delete")

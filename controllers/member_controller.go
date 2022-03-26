@@ -32,10 +32,6 @@ func GetAUser(w http.ResponseWriter, r *http.Request) {
 	// 	json.NewEncoder(w).Encode((response))
 }
 
-func GetMemberCart(w http.ResponseWriter, r *http.Request) {
-	return
-}
-
 func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 	return
 }

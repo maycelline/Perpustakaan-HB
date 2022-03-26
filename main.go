@@ -1,43 +1,95 @@
 package main
 
 import (
-	controllers "Tools/controllers"
 	"fmt"
+	"log"
+	"net/http"
+	"time"
+
+	"Tools/controllers"
+	"Tools/model"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
-	var data controllers.DataBorrowed
-	data.UserName = "Maycelline"
-	data.CourierName = "Dadang Sudrajat"
-	data.OrderDate = "20 Mei 2021"
-	data.Time = "19.00"
+	router := mux.NewRouter()
 
-	var book1 controllers.Book
-	book1.Title = "Daun yang jatuh tak pernah membenci angin"
-	book1.Author = "Tere Liye"
+	// router.HandleFunc("/books", controllers.Authenticate(controllers.GetAllBooks, 0)).Methods("GET")
+	router.HandleFunc("/book", controllers.GetAllBooks).Methods("GET")
 
-	var book2 controllers.Book
-	book2.Title = "Siksa Kubur"
-	book2.Author = "Testing"
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowCredentials: true,
+	})
+	handler := corsHandler.Handler(router)
 
-	var book3 controllers.Book
-	book3.Title = "Dear Nathan"
-	book3.Author = "Rintiksedu"
+	http.Handle("/", router)
+	fmt.Println("Connected to port 8080")
+	log.Println(http.ListenAndServe(":8080", handler))
 
-	var books []controllers.Book
-	books = append(books, book1)
-	books = append(books, book2)
-	books = append(books, book3)
-	data.Books = books
+	var data model.BorrowDataHTML
+	var borrows []model.Borrowing
+	var borrowing1 model.Borrowing
+	var borrowing2 model.Borrowing
 
-	var branch controllers.Branch
-	branch.Name = "Cikutra"
-	branch.Address = "Jalan cikutra no 19"
+	borrowing1.Book.Title = "Daun yang jatuh tidak pernah membenci angin"
+	borrowing1.Book.Author = "Tere Liye"
+	// borrowing1.Book.BranchName = "Cikutra"
+	borrowing1.BorrowDate = time.Now()
 
-	data.Branch = branch
+	borrowing2.Book.Title = "Please, Look after Mom"
+	borrowing2.Book.Author = "Tere Liye"
+	// borrowing2.Book.BranchName = "Cikutra"
+	borrowing2.BorrowDate = time.Now()
 
-	fmt.Println(data.Books)
+	borrows = append(borrows, borrowing1)
+	borrows = append(borrows, borrowing2)
+
+	var courier model.Courier
+	courier.CourierName = "Dadang Sudrajat"
+
+	// var Branch model.Branch
+
+	data.Borrows = borrows
+	data.Courier = courier
+	data.User.FullName = "Maycelline Selvyanti"
+	data.Branch.Name = "Cikutra"
+	data.Branch.Address = "Jl Cikutra no 19"
+	data.CourierCome = time.Now().Add(time.Minute * 30)
 
 	controllers.SendBorrowAcceptedEmail("maycelinesudarsono@gmail.com", data)
 
+	// data.Time = "19.00"
+
+	// var book1 controllers.Book
+	// book1.Title = "Daun yang jatuh tak pernah membenci angin"
+	// book1.Author = "Tere Liye"
+
+	// var book2 controllers.Book
+	// book2.Title = "Siksa Kubur"
+	// book2.Author = "Testing"
+
+	// var book3 controllers.Book
+	// book3.Title = "Dear Nathan"
+	// book3.Author = "Rintiksedu"
+
+	// var books []controllers.Book
+	// books = append(books, book1)
+	// books = append(books, book2)
+	// books = append(books, book3)
+	// data.Books = books
+
+	// var branch controllers.Branch
+	// branch.Name = "Cikutra"
+	// branch.Address = "Jalan cikutra no 19"
+
+	// data.Branch = branch
+
+	// fmt.Println(data.Books)
+
+	// controllers.SendBorrowAcceptedEmail("maycelinesudarsono@gmail.com", data)
 }

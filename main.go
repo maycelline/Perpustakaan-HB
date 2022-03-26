@@ -7,8 +7,8 @@ import (
 	controllers "Perpustakaan-HB/controllers"
 
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/gorilla/mux"
-	_ "github.com/rs/cors"
+	// "github.com/gorilla/mux"
+	// "github.com/rs/cors"
 )
 
 func main() {

@@ -13,18 +13,18 @@ import (
 )
 
 func main() {
-	controllers.WeeklyEmailScheduler()
+	// controllers.WeeklyEmailScheduler()
 
 	router := mux.NewRouter()
 
-	// EndPoint
+	// General
 	router.HandleFunc("/login", controllers.CheckUserLogin).Methods("POST")
 	router.HandleFunc("/register", controllers.CreateUserRegister).Methods("POST")
 	router.HandleFunc("/book/popular", controllers.GetPopularBook).Methods("GET")
 	router.HandleFunc("/logout", controllers.UserLogout).Methods("POST")
 
 	// Member
-	// router.HandleFunc("/book/list",).Methods("GET")
+	router.HandleFunc("/book/list", controllers.GetAllBooks).Methods("GET")
 	router.HandleFunc("/member/cart/{member_id}", controllers.GetMemberCart).Methods("GET")
 	router.HandleFunc("/member/borrowing/checkout/{member_id}", controllers.CreateBorrowingList).Methods("POST")
 	router.HandleFunc("/member/return/{member_id}", controllers.GetOngoingBorrowing).Methods("GET")
@@ -42,15 +42,15 @@ func main() {
 	router.HandleFunc("/admin/caddBook", controllers.CreateNewBook).Methods("POST")
 
 	// OWNER
-	// router.HandleFunc("/owner/home").Methods("GET")
-	// router.HandleFunc("/owner/branchIncome").Methods("GET")
-	// router.HandleFunc("owner/income").Methods("GET")
+	router.HandleFunc("/owner/home", controllers.GetOwnerData).Methods("GET")
+	router.HandleFunc("/owner/branchIncome", controllers.GetBranchIncome).Methods("GET")
+	router.HandleFunc("owner/income", controllers.GetAllIncome).Methods("GET")
 
 	// CORS
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
-		AllowCredentials: true, //kalo ga nanti ga bisa ngakses  karena cookies dkk
+		AllowCredentials: true,
 	})
 
 	handler := corsHandler.Handler(router)

@@ -39,12 +39,12 @@ func main() {
 	router.HandleFunc("/admin/borrowApprove", controllers.ApproveBorrowing).Methods("GET")
 	router.HandleFunc("/admin/returnApprove", controllers.ApproveUserReturn).Methods("GET")
 	router.HandleFunc("/admin/chooseCourier/{borrow_id}", controllers.ChangeBorrowingState).Methods("PUT")
-	router.HandleFunc("/admin/caddBook", controllers.CreateNewBook).Methods("POST")
+	router.HandleFunc("/admin/addBook", controllers.CreateNewBook).Methods("POST")
 
 	// OWNER
 	router.HandleFunc("/owner/home", controllers.GetOwnerData).Methods("GET")
 	router.HandleFunc("/owner/branchIncome", controllers.GetBranchIncome).Methods("GET")
-	router.HandleFunc("owner/income", controllers.GetAllIncome).Methods("GET")
+	router.HandleFunc("/owner/income", controllers.GetAllIncome).Methods("GET")
 
 	// CORS
 	corsHandler := cors.New(cors.Options{

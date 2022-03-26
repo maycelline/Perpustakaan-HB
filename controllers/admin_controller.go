@@ -3,21 +3,21 @@ package controllers
 import "net/http"
 
 func GetAdminData(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }
 
 func ApproveBorrowing(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }
 
 func ApproveUserReturn(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }
 
 func CreateNewBook(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }

@@ -7,13 +7,13 @@ import (
 )
 
 func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }
 
 func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
-	return
+	// return
 }

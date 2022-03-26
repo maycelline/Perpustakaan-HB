@@ -14,10 +14,6 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func GetPopularBook(w http.ResponseWriter, r *http.Request) {
-	return
-}
-
 func UserLogout(w http.ResponseWriter, r *http.Request) {
 	return
 }

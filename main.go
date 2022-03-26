@@ -24,7 +24,7 @@ func main() {
 	router.HandleFunc("/logout", controllers.UserLogout).Methods("POST")
 
 	// Member
-	// router.HandleFunc("/book/list",).Methods("GET")
+	router.HandleFunc("/book/list", controllers.GetAllBooks).Methods("GET")
 	router.HandleFunc("/member/cart/{member_id}", controllers.GetMemberCart).Methods("GET")
 	router.HandleFunc("/member/borrowing/checkout/{member_id}", controllers.CreateBorrowingList).Methods("POST")
 	router.HandleFunc("/member/return/{member_id}", controllers.GetOngoingBorrowing).Methods("GET")
@@ -39,12 +39,12 @@ func main() {
 	router.HandleFunc("/admin/borrowApprove", controllers.ApproveBorrowing).Methods("GET")
 	router.HandleFunc("/admin/returnApprove", controllers.ApproveUserReturn).Methods("GET")
 	router.HandleFunc("/admin/chooseCourier/{borrow_id}", controllers.ChangeBorrowingState).Methods("PUT")
-	router.HandleFunc("/admin/caddBook", controllers.CreateNewBook).Methods("POST")
+	router.HandleFunc("/admin/addBook", controllers.CreateNewBook).Methods("POST")
 
 	// OWNER
-	// router.HandleFunc("/owner/home").Methods("GET")
-	// router.HandleFunc("/owner/branchIncome").Methods("GET")
-	// router.HandleFunc("owner/income").Methods("GET")
+	router.HandleFunc("/owner/home", controllers.GetOwnerData).Methods("GET")
+	router.HandleFunc("/owner/branchIncome", controllers.GetBranchIncome).Methods("GET")
+	router.HandleFunc("/owner/income", controllers.GetAllIncome).Methods("GET")
 
 	// CORS
 	corsHandler := cors.New(cors.Options{

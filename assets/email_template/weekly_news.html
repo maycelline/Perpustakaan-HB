@@ -1,0 +1,31 @@
+<!DOCTYPE html public "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="content-type" content="text/html; charset=ISO-8859-15">
+        <style>
+            body {
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Discover Our Weekly Popular Books!</h1>
+        <p>Hi, {{.FullName}}.</p>
+        <p>These are our recommended book for you to read:</p>
+        <ul>
+            {{range .Books}}
+            <li>{{.Title}} by {{.Author}}</li>
+            <br>
+            {{end}}
+        </ul>
+        <p>Which one you like the most?</p>
+        <h5>Best regards,</h5>
+        <br>
+        <br>
+        <p>PHB Team</p>
+    </body>
+
+
+
+</html>

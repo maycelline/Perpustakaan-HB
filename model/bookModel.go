@@ -12,3 +12,8 @@ type Book struct {
 	BookStock  int    `json:"bookStock"`
 	BranchName string `json:"branchName"`
 }
+
+type PopularBooksEmail struct {
+	Books    []Book
+	FullName string
+}

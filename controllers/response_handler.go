@@ -6,20 +6,12 @@ import (
 	"net/http"
 )
 
-// func sendSuccessResponse(w http.ResponseWriter, message string, books []Book) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	var response BorrowData
-// 	response.Status = 200
-// 	response.Message = message
-// 	response.Data = users
-// 	json.NewEncoder(w).Encode(response)
-// }
-
-func sendSuccessResponse(w http.ResponseWriter, message string) {
+func sendSuccessResponse(w http.ResponseWriter, message string, value interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	var response model.SuccessResponse
 	response.Status = 200
 	response.Message = message
+	response.Data = value
 	json.NewEncoder(w).Encode(response)
 }
 

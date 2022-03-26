@@ -1,10 +1,9 @@
 package view
 
 import (
+	"Tools/model"
 	"encoding/json"
 	"net/http"
-
-	"../model"
 )
 
 func successProcess(w http.ResponseWriter) {

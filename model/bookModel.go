@@ -20,7 +20,6 @@ type PopularBook struct {
 	Author    string `json:"author"`
 	Genre     string `json:"genre"`
 	Year      int    `json:"year"`
-	Page      int    `json:"page"`
 }
 
 type PopularBooksEmail struct {

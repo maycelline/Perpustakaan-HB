@@ -10,5 +10,6 @@ type User struct {
 	Phone     string    `json:"phone"`
 	Email     string    `json:"email"`
 	Address   string    `json:"address"`
+	Password  string    `json:"password"`
 	Balance   int       `json:"balance"`
 }

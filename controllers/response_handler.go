@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"Tools/model"
+	"Perpustakaan-HB/model"
 	"encoding/json"
 	"net/http"
 )

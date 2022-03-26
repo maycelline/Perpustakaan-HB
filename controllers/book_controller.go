@@ -3,7 +3,7 @@ package controllers
 import (
 	// "crypto/md5"
 	// "encoding/hex"
-	"Tools/model"
+	"Perpustakaan-HB/model"
 	"encoding/json"
 	"fmt"
 	"log"

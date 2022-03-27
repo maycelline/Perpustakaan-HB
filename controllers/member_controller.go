@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	"Perpustakaan-HB/model"
 	"log"
 	"net/http"
 	"strconv"
+
+	"Perpustakaan-HB/model"
 
 	"github.com/gorilla/mux"
 )
@@ -13,15 +14,15 @@ func GetAUser(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
-	query := "SELECT users.userId, users.fullName, users.userName, users.password, users.userType, members.balance FROM users JOIN members ON users.userId = members.memberId WHERE members.Id = ?"
-
 	vars := mux.Vars(r)
-	memberId, _ := strconv.Atoi(vars["member_id"])
+	memberId := vars["member_id"]
+
+	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?"
 
 	rows := db.QueryRow(query, memberId)
 
 	var member model.Member
-	if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.Password, &member.User.UserType, &member.Balance); err != nil {
+	if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	} else {
@@ -222,7 +223,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 	var member model.Member
 	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
@@ -265,7 +266,7 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 	var member model.Member
 	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
@@ -313,7 +314,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	var member model.Member
 	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
@@ -346,7 +347,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	var member model.Member
 	var members []model.Member
 	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.Username, &member.User.BirthDate, &member.User.Phone, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
+		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
@@ -354,15 +355,18 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result, errQuery := db.Exec("DELETE FROM users WHERE id=?", userID)
-
-	num, _ := result.RowsAffected()
-
+	_, errQuery := db.Exec("DELETE FROM members WHERE id=?", userID)
 	if errQuery == nil {
-		if num == 0 {
-			sendBadRequestResponse(w, "Error 0 Rows Affected")
+		result, errQuery := db.Exec("DELETE FROM users WHERE id=?", userID)
+		num, _ := result.RowsAffected()
+		if errQuery == nil {
+			if num == 0 {
+				sendBadRequestResponse(w, "Error 0 Rows Affected")
+			} else {
+				sendSuccessResponse(w, "Delete Success", members)
+			}
 		} else {
-			sendSuccessResponse(w, "Delete Success", members)
+			sendBadRequestResponse(w, "Error Can Not Delete")
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Delete")

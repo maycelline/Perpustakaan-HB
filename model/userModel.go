@@ -5,9 +5,9 @@ import "time"
 type User struct {
 	ID                int       `json:"idUser,omitempty"`
 	FullName          string    `json:"fullName,omitempty"`
-	Username          string    `json:"userName,omitempty"`
+	UserName          string    `json:"userName,omitempty"`
 	BirthDate         time.Time `json:"birthDate,omitempty"`
-	Phone             string    `json:"phone,omitempty"`
+	PhoneNumber       string    `json:"phone,omitempty"`
 	Email             string    `json:"email,omitempty"`
 	Address           string    `json:"address,omitempty"`
 	AdditionalAddress string    `json:"additionalAddress,omitempty"`

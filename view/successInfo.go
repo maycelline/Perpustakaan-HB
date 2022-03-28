@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func successProcess(w http.ResponseWriter) {
+func SuccessProcess(w http.ResponseWriter) {
 	var response model.SuccessResponse
 	response.Status = 200
 	response.Message = "Success"

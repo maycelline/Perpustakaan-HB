@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
+	"Perpustakaan-HB/view"
 	"log"
 	"net/http"
 	"strconv"
@@ -69,6 +70,6 @@ func CreateNewBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendSuccessResponse(w, "Insert success!", nil)
+	view.SuccessProcess(w)
 	// return
 }

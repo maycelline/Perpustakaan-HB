@@ -53,6 +53,8 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				if err := rows.Scan(&member.Balance); err != nil {
 					return
 				}
+				generateToken(w, member)
+				sendSuccessResponse(w, "Login Success", member)
 			} else if user.UserType == "ADMIN" {
 				var admin model.Admin
 				admin.User = user
@@ -62,7 +64,6 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			} else {
-
 			}
 		} else {
 			// response := errorUserNotFound()

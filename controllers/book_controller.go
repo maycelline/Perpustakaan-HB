@@ -2,11 +2,12 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 func GetAllBooks(w http.ResponseWriter, r *http.Request) {
@@ -91,19 +92,21 @@ func GetPopularBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := context.Background()
+
 	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
 	})
 
-	err = client.Set("popular", converted, 0).Err()
+	err = client.Set(ctx, "popular", converted, 0).Err()
 	if err != nil {
 		sendBadRequestResponse(w, "Error Redis Undefined")
 		return
 	}
 
-	value, err := client.Get("popular").Result()
+	value, err := client.Get(ctx, "popular").Result()
 	if err != nil {
 		sendBadRequestResponse(w, "Error Redis Undefined")
 		return

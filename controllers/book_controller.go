@@ -75,8 +75,8 @@ func GetPopularBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var book model.PopularBook
-	var books []model.PopularBook
+	var book model.Book
+	var books []model.Book
 	for rows.Next() {
 		if err := rows.Scan(&book.ID, &book.Title, &book.CoverPath, &book.Author, &book.Genre, &book.Year); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")

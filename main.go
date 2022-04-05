@@ -23,28 +23,29 @@ func main() {
 	router.HandleFunc("/book/popular", controllers.GetPopularBook).Methods("GET")
 	router.HandleFunc("/logout", controllers.UserLogout).Methods("POST")
 
-	// Member
-	router.HandleFunc("/book/list", controllers.GetAllBooks).Methods("GET")
-	router.HandleFunc("/member/cart", controllers.GetMemberCart).Methods("GET")
-	router.HandleFunc("/member/borrowing/checkout", controllers.CreateBorrowingList).Methods("POST")
-	router.HandleFunc("/member/return", controllers.GetOngoingBorrowing).Methods("GET")
-	router.HandleFunc("/member/profile", controllers.GetAUser).Methods("GET")
-	router.HandleFunc("/member/profile/edit", controllers.EditUserProfile).Methods("PUT")
-	router.HandleFunc("/member/password/edit", controllers.EditUserPassword).Methods("PUT")
-	router.HandleFunc("/member/topup", controllers.TopupUserBalance).Methods("POST")
-	router.HandleFunc("/member/delete", controllers.DeleteAccount).Methods("DELETE")
-	router.HandleFunc("/member/borrowHistory", controllers.GetMemberHistory).Methods("GET")
-	// ADMIN
-	router.HandleFunc("/admin/home", controllers.GetAdminData).Methods("GET")
-	router.HandleFunc("/admin/borrowApprove", controllers.ApproveBorrowing).Methods("GET")
-	router.HandleFunc("/admin/returnApprove", controllers.ApproveUserReturn).Methods("GET")
-	router.HandleFunc("/admin/chooseCourier/{borrow_id}", controllers.ChangeBorrowingState).Methods("PUT")
-	router.HandleFunc("/admin/addBook", controllers.CreateNewBook).Methods("POST")
+	// Member (1)
+	router.HandleFunc("/book/list", controllers.Authenticate(controllers.GetAllBooks, 1)).Methods("GET")
+	router.HandleFunc("/member/cart", controllers.Authenticate(controllers.GetMemberCart, 1)).Methods("GET")
+	router.HandleFunc("/member/borrowing/checkout", controllers.Authenticate(controllers.CreateBorrowingList, 1)).Methods("POST")
+	router.HandleFunc("/member/return", controllers.Authenticate(controllers.GetOngoingBorrowing, 1)).Methods("GET")
+	router.HandleFunc("/member/profile", controllers.Authenticate(controllers.GetAUser, 1)).Methods("GET")
+	router.HandleFunc("/member/profile/edit", controllers.Authenticate(controllers.EditUserProfile, 1)).Methods("PUT")
+	router.HandleFunc("/member/password/edit", controllers.Authenticate(controllers.EditUserPassword, 1)).Methods("PUT")
+	router.HandleFunc("/member/topup", controllers.Authenticate(controllers.TopupUserBalance, 1)).Methods("POST")
+	router.HandleFunc("/member/delete", controllers.Authenticate(controllers.DeleteAccount, 1)).Methods("DELETE")
+	router.HandleFunc("/member/borrowHistory", controllers.Authenticate(controllers.GetMemberHistory, 1)).Methods("GET")
 
-	// OWNER
-	router.HandleFunc("/owner/home", controllers.GetOwnerData).Methods("GET")
-	router.HandleFunc("/owner/branchIncome", controllers.GetBranchIncome).Methods("GET")
-	router.HandleFunc("/owner/income", controllers.GetAllIncome).Methods("GET")
+	// Admin (2)
+	router.HandleFunc("/admin/home", controllers.Authenticate(controllers.GetAdminData, 2)).Methods("GET")
+	router.HandleFunc("/admin/borrowApprove", controllers.Authenticate(controllers.ApproveBorrowing, 2)).Methods("GET")
+	router.HandleFunc("/admin/returnApprove", controllers.Authenticate(controllers.ApproveUserReturn, 2)).Methods("GET")
+	router.HandleFunc("/admin/chooseCourier/{borrow_id}", controllers.Authenticate(controllers.ChangeBorrowingState, 2)).Methods("PUT")
+	router.HandleFunc("/admin/addBook", controllers.Authenticate(controllers.CreateNewBook, 2)).Methods("POST")
+
+	// Owner (3)
+	router.HandleFunc("/owner/home", controllers.Authenticate(controllers.GetOwnerData, 3)).Methods("GET")
+	router.HandleFunc("/owner/branchIncome", controllers.Authenticate(controllers.GetBranchIncome, 3)).Methods("GET")
+	router.HandleFunc("/owner/income", controllers.Authenticate(controllers.GetAllIncome, 3)).Methods("GET")
 
 	// CORS
 	corsHandler := cors.New(cors.Options{

@@ -74,8 +74,16 @@ func resetUserToken(w http.ResponseWriter) {
 	})
 }
 
-func Authenticate(next http.HandlerFunc, accessType string) http.HandlerFunc {
+func Authenticate(next http.HandlerFunc, accessTypeInt int) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var accessType string
+		if accessTypeInt == 1 {
+			accessType = "MEMBER"
+		} else if accessTypeInt == 2 {
+			accessType = "ADMIN"
+		} else {
+			accessType = "OWNER"
+		}
 		isValidToken := validateUserToken(r, accessType)
 		if !isValidToken {
 			sendUnauthorizedResponse(w)

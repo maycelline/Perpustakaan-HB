@@ -31,7 +31,7 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 		var user model.User
 
 		rows := db.QueryRow(query, password, userName)
-		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
+		if err := rows.Scan(&user.ID, &user.FullName, &user.Username, &user.BirthDate, &user.Phone, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
 			// log.Println(err.Error())
 			// response := errorTableField()
 			// w.Header().Set("Content-Type", "application/json")

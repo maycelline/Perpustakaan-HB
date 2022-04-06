@@ -20,7 +20,7 @@ func main() {
 	// General
 	router.HandleFunc("/login", controllers.CheckUserLogin).Methods("POST")
 	router.HandleFunc("/register", controllers.CreateUserRegister).Methods("POST")
-	router.HandleFunc("/book/popular", controllers.GetPopularBook).Methods("GET")
+	router.HandleFunc("/book/popular", controllers.GetPopularBooks).Methods("GET")
 	router.HandleFunc("/logout", controllers.UserLogout).Methods("POST")
 
 	// Member (1)

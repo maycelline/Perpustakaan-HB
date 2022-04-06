@@ -13,21 +13,22 @@ var jwtKey = []byte("PHBH13HarapanBangsaH1tz!!")
 var tokenName = "token"
 
 type Claims struct {
-	ID                int       `json:"idUser,omitempty"`
-	FullName          string    `json:"fullName,omitempty"`
-	UserName          string    `json:"userName,omitempty"`
-	BirthDate         time.Time `json:"birthDate,omitempty"`
-	PhoneNumber       string    `json:"phone,omitempty"`
-	Email             string    `json:"email,omitempty"`
-	Address           string    `json:"address,omitempty"`
-	AdditionalAddress string    `json:"additionalAddress,omitempty"`
-	Password          string    `json:"password,omitempty"`
-	UserType          string    `json:"userType,omitempty"`
-	Balance           int       `json:"balance,omitempty"`
+	ID                int          `json:"idUser,omitempty"`
+	FullName          string       `json:"fullName,omitempty"`
+	UserName          string       `json:"userName,omitempty"`
+	BirthDate         time.Time    `json:"birthDate,omitempty"`
+	PhoneNumber       string       `json:"phone,omitempty"`
+	Email             string       `json:"email,omitempty"`
+	Address           string       `json:"address,omitempty"`
+	AdditionalAddress string       `json:"additionalAddress,omitempty"`
+	Password          string       `json:"password,omitempty"`
+	UserType          string       `json:"userType,omitempty"`
+	Balance           int          `json:"balance,omitempty"`
+	Branch            model.Branch `json:"branch,omitempty"`
 	jwt.StandardClaims
 }
 
-func generateToken(w http.ResponseWriter, member model.Member) {
+func generateMemberToken(w http.ResponseWriter, member model.Member) {
 	tokenExpiryTime := time.Now().Add(5 * time.Minute)
 
 	claims := &Claims{
@@ -42,6 +43,42 @@ func generateToken(w http.ResponseWriter, member model.Member) {
 		Password:          member.User.Password,
 		UserType:          member.User.UserType,
 		Balance:           member.Balance,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: tokenExpiryTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString(jwtKey)
+	if err != nil {
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     tokenName,
+		Value:    signedToken,
+		Expires:  tokenExpiryTime,
+		Secure:   false,
+		HttpOnly: true,
+		Path:     "/",
+	})
+}
+
+func generateAdminToken(w http.ResponseWriter, admin model.Admin) {
+	tokenExpiryTime := time.Now().Add(5 * time.Minute)
+
+	claims := &Claims{
+		ID:                admin.User.ID,
+		FullName:          admin.User.FullName,
+		UserName:          admin.User.UserName,
+		BirthDate:         admin.User.BirthDate,
+		PhoneNumber:       admin.User.PhoneNumber,
+		Email:             admin.User.Email,
+		Address:           admin.User.Address,
+		AdditionalAddress: admin.User.AdditionalAddress,
+		Password:          admin.User.Password,
+		UserType:          admin.User.UserType,
+		Branch:            admin.Branch,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: tokenExpiryTime.Unix(),
 		},

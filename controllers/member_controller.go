@@ -36,7 +36,7 @@ func GetMemberCart(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 
-	query := "SELECT a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN carts d ON b.stockId = d.stockId JOIN members e ON d.memberId = e.memberId WHERE e.memberId = ?"
+	query := "SELECT d.cartId, a.bookTitle, a.author, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN carts d ON b.stockId = d.stockId JOIN members e ON d.memberId = e.memberId WHERE e.memberId = ?"
 
 	rows, err := db.Query(query, memberId)
 	if err != nil {
@@ -44,19 +44,19 @@ func GetMemberCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var book model.Book
-	var books []model.Book
+	var cart model.Cart
+	var carts []model.Cart
 	for rows.Next() {
-		if err := rows.Scan(&book.ID, &book.CoverPath, &book.Title, &book.Author, &book.Genre, &book.Year, &book.Page, &book.RentPrice, &book.Stock, &book.BranchName); err != nil {
+		if err := rows.Scan(&cart.ID, &cart.Book.Title, &cart.Book.Author, &cart.Book.RentPrice, &cart.Book.Stock, &cart.Book.BranchName); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
-			books = append(books, book)
+			carts = append(carts, cart)
 		}
 	}
 
-	if len(books) != 0 {
-		sendSuccessResponse(w, "Get Success", books)
+	if len(carts) != 0 {
+		sendSuccessResponse(w, "Get Success", carts)
 	} else {
 		sendBadRequestResponse(w, "Error Array Size Not Correct")
 	}
@@ -77,7 +77,10 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 		sendNotFoundResponse(w, "Value Not Found")
 		return
 	}
-	borrowDate := r.Form.Get("borrowDate")
+
+	deliveryDate := r.Form.Get("deliveryDate")
+	deliveryTime := r.Form.Get("deliveryTime")
+	borrowDate := deliveryDate + " " + deliveryTime
 
 	var book model.Book
 	var books []model.Book
@@ -136,7 +139,7 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	sendSuccessResponse(w, "Insert Success", books)
+	sendSuccessResponse(w, "Checkout Success", books)
 
 	db.Close()
 }

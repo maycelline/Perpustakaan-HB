@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func GetPopularBooksFromCache() []model.PopularBook {
+func GetPopularBooksFromCache() []model.Book {
 	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
@@ -23,13 +23,13 @@ func GetPopularBooksFromCache() []model.PopularBook {
 		return nil
 	}
 
-	var books []model.PopularBook
+	var books []model.Book
 	_ = json.Unmarshal([]byte(value), &books)
 
 	return books
 }
 
-func SetPopularBooksCache(books []model.PopularBook) {
+func SetPopularBooksCache(books []model.Book) {
 	converted, err := json.Marshal(books)
 	if err != nil {
 		log.Println(err)

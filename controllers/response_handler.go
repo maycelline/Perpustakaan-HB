@@ -24,14 +24,14 @@ func sendBadRequestResponse(w http.ResponseWriter, errorMessage string) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// func sendUnauthorizedResponse(w http.ResponseWriter) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusUnauthorized)
-// 	var response model.ErrorResponse
-// 	response.Status = 401
-// 	response.Message = "Unauthorized Access"
-// 	json.NewEncoder(w).Encode(response)
-// }
+func sendUnauthorizedResponse(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+	var response model.ErrorResponse
+	response.Status = 401
+	response.Message = "Unauthorized Access"
+	json.NewEncoder(w).Encode(response)
+}
 
 func sendNotFoundResponse(w http.ResponseWriter, errorMessage string) {
 	w.Header().Set("Content-Type", "application/json")
@@ -40,12 +40,4 @@ func sendNotFoundResponse(w http.ResponseWriter, errorMessage string) {
 	response.Status = 404
 	response.Message = errorMessage
 	json.NewEncoder(w).Encode(response)
-}
-
-func successProcess(w http.ResponseWriter) {
-	var response model.SuccessResponse
-	response.Status = 200
-	response.Message = "Success"
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode((response))
 }

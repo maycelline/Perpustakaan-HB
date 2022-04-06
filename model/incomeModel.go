@@ -9,6 +9,6 @@ type MonthIncome struct {
 }
 
 type Income struct {
-	Branch      Branch        `json:"branch"`
+	BranchName  string        `json:"branchName"`
 	IncomeMonth []MonthIncome `json:"incomeMonth"`
 }

@@ -6,13 +6,13 @@ import (
 	"net/http"
 
 	"Perpustakaan-HB/controllers"
-
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
 
 func main() {
+	controllers.GetBranchIncome()
 	// controllers.WeeklyEmailScheduler()
 
 	router := mux.NewRouter()
@@ -44,7 +44,7 @@ func main() {
 
 	// Owner (3)
 	router.HandleFunc("/owner/home", controllers.Authenticate(controllers.GetOwnerData, 3)).Methods("GET")
-	router.HandleFunc("/owner/branchIncome", controllers.Authenticate(controllers.GetBranchIncome, 3)).Methods("GET")
+	// router.HandleFunc("/owner/branchIncome", controllers.Authenticate(controllers.GetBranchIncome, 3)).Methods("GET")
 	router.HandleFunc("/owner/income", controllers.Authenticate(controllers.GetAllIncome, 3)).Methods("GET")
 
 	// CORS

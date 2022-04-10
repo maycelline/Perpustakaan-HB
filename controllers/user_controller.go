@@ -17,11 +17,11 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
 	password := encodePassword(r.Form.Get("password"))
-	// fmt.Println(password)
 	userName := r.Form.Get("userName")
 
 	if password != "" && userName != "" {
@@ -76,7 +76,8 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-
+		sendServerErrorResponse(w, "Internal Server Error")
+		return
 	}
 
 	fullName := r.Form.Get("fullName")

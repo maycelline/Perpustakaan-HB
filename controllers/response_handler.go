@@ -41,3 +41,12 @@ func sendNotFoundResponse(w http.ResponseWriter, errorMessage string) {
 	response.Message = errorMessage
 	json.NewEncoder(w).Encode(response)
 }
+
+func sendServerErrorResponse(w http.ResponseWriter, errorMessage string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	var response model.ErrorResponse
+	response.Status = 500
+	response.Message = errorMessage
+	json.NewEncoder(w).Encode(response)
+}

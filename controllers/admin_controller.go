@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
-	"Perpustakaan-HB/view"
 	"log"
 	"net/http"
 	"strconv"
@@ -50,6 +49,7 @@ func CreateNewBook(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 
 	if err != nil {
+		sendServerErrorResponse(w, "Internal Server Error!")
 		return
 	}
 
@@ -66,10 +66,10 @@ func CreateNewBook(w http.ResponseWriter, r *http.Request) {
 	_, errQuery := db.Exec(query, title, author, genre, year, page, rentPrice, coverPath)
 
 	if errQuery != nil {
-		log.Fatal(errQuery.Error())
+		sendBadRequestResponse(w, "Bad Query")
 		return
 	}
 
-	view.SuccessProcess(w)
+	sendSuccessResponse(w, "Success", nil)
 	// return
 }

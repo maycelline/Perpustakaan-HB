@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	_ "encoding/json"
+	"fmt"
 	_ "log"
 	"net/http"
 
@@ -23,6 +24,8 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	password := encodePassword(r.Form.Get("password"))
 	userName := r.Form.Get("userName")
+	fmt.Println(password)
+	fmt.Println(userName)
 
 	if password != "" && userName != "" {
 		query := "SELECT * FROM users WHERE password = ? AND username = ?"

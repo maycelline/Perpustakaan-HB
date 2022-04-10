@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -11,8 +12,8 @@ func GetAdminData(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
-	adminId := r.URL.Query().Get("admin_id")
-	query := "SELECT u.FullName, b.branchId, b.branchName ,b.branchAddress FROM users u JOIN admins a ON u.userId = a.adminId JOIN branches b ON a.branchId = b.branchId WHERE a.adminId = " + adminId + "; "
+	adminId := getIdFromCookies(r)
+	query := "SELECT u.FullName, b.branchId, b.branchName ,b.branchAddress FROM users u JOIN admins a ON u.userId = a.adminId JOIN branches b ON a.branchId = b.branchId WHERE a.adminId = " + strconv.Itoa(adminId) + "; "
 
 	row := db.QueryRow(query)
 
@@ -30,12 +31,142 @@ func GetAdminData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ApproveBorrowing(w http.ResponseWriter, r *http.Request) {
-	// return
+func SeeUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
+	db := connect()
+	defer db.Close()
+
+	adminId := getIdFromCookies(r)
+	var branchId int
+
+	//Get Admin Branch
+	query := "SELECT branchId FROM admins WHERE adminId = " + strconv.Itoa(adminId) + "; "
+	row := db.QueryRow(query)
+
+	if err := row.Scan(&branchId); err != nil {
+		log.Println(err)
+		sendBadRequestResponse(w, "Bad Query")
+		return
+	}
+
+	fmt.Println(branchId, "branch")
+
+	queryBorrow := "SELECT borrowId, returnDate FROM borrows WHERE borrowState = 'PROCESSED'"
+	rowsBorrow, err := db.Query(queryBorrow)
+
+	if err != nil {
+		fmt.Println(err)
+		sendNotFoundResponse(w, "Table Not Found")
+		return
+	}
+
+	var borrowing model.Borrowing
+	var borrowings []model.Borrowing
+	var courier model.Courier
+	var couriers []model.Courier
+	for rowsBorrow.Next() {
+		if err := rowsBorrow.Scan(&borrowing.ID, &borrowing.ReturnDate); err != nil {
+			fmt.Println(err)
+			sendBadRequestResponse(w, "Error Field Undifined")
+			return
+		} else {
+			borrowings = append(borrowings, borrowing)
+		}
+	}
+
+	queryCourier := "SELECT courierId, courierName FROM couriers WHERE courierState = 'AVAILABLE'"
+	rowsCourier, err := db.Query(queryCourier)
+
+	if err != nil {
+		fmt.Println(err)
+		sendNotFoundResponse(w, "Table Not Found")
+		return
+	}
+
+	for rowsCourier.Next() {
+		if err := rowsCourier.Scan(&courier.ID, &courier.CourierName); err != nil {
+			fmt.Println(err)
+			sendBadRequestResponse(w, "Error Field Undifined")
+			return
+		} else {
+			couriers = append(couriers, courier)
+		}
+	}
+
+	var borrowdata model.BorrowData
+	borrowdata.Borrows = borrowings
+	borrowdata.Couriers = couriers
+
+	sendSuccessResponse(w, "Success!", borrowdata)
+
 }
 
-func ApproveUserReturn(w http.ResponseWriter, r *http.Request) {
-	// return
+func SeeUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
+	db := connect()
+	defer db.Close()
+
+	adminId := getIdFromCookies(r)
+	var branchId int
+
+	//Get Admin Branch -- Rencananya mau ditampilin per cabang
+	query := "SELECT branchId FROM admins WHERE adminId = " + strconv.Itoa(adminId) + "; "
+	row := db.QueryRow(query)
+
+	if err := row.Scan(&branchId); err != nil {
+		log.Println(err)
+		sendBadRequestResponse(w, "Bad Query")
+		return
+	}
+
+	// fmt.Println(branchId, "branch")
+
+	queryBorrow := "SELECT borrowId, returnDate FROM borrows WHERE borrowState = 'FINISHED'" //tar diganti
+	rowsBorrow, err := db.Query(queryBorrow)
+
+	if err != nil {
+		fmt.Println(err)
+		sendNotFoundResponse(w, "Table Not Found")
+		return
+	}
+
+	var borrowing model.Borrowing
+	var borrowings []model.Borrowing
+	var courier model.Courier
+	var couriers []model.Courier
+	for rowsBorrow.Next() {
+		if err := rowsBorrow.Scan(&borrowing.ID, &borrowing.ReturnDate); err != nil {
+			fmt.Println(err)
+			sendBadRequestResponse(w, "Error Field Undifined")
+			return
+		} else {
+			borrowings = append(borrowings, borrowing)
+		}
+	}
+
+	queryCourier := "SELECT courierId, courierName FROM couriers WHERE courierState = 'AVAILABLE'"
+	rowsCourier, err := db.Query(queryCourier)
+
+	if err != nil {
+		fmt.Println(err)
+		sendNotFoundResponse(w, "Table Not Found")
+		return
+	}
+
+	for rowsCourier.Next() {
+		if err := rowsCourier.Scan(&courier.ID, &courier.CourierName); err != nil {
+			fmt.Println(err)
+			sendBadRequestResponse(w, "Error Field Undifined")
+			return
+		} else {
+			couriers = append(couriers, courier)
+		}
+	}
+
+	var borrowdata model.BorrowData
+	borrowdata.Borrows = borrowings
+	borrowdata.Couriers = couriers
+
+	sendSuccessResponse(w, "Success!", borrowdata)
+
 }
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
@@ -71,5 +202,4 @@ func CreateNewBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sendSuccessResponseWithoutData(w, "Book has been inserted successfully")
-	// return
 }

@@ -4,6 +4,7 @@ import (
 	"Perpustakaan-HB/model"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func GetAdminData(w http.ResponseWriter, r *http.Request) {
@@ -42,5 +43,33 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateNewBook(w http.ResponseWriter, r *http.Request) {
+	db := connect()
+	defer db.Close()
+
+	err := r.ParseForm()
+
+	if err != nil {
+		sendServerErrorResponse(w, "Internal Server Error!")
+		return
+	}
+
+	title := r.Form.Get("title")
+	coverPath := r.Form.Get("coverPath")
+	author := r.Form.Get("author")
+	genre := r.Form.Get("genre")
+	year, _ := strconv.Atoi(r.Form.Get("year"))
+	page, _ := strconv.Atoi(r.Form.Get("page"))
+	rentPrice, _ := strconv.Atoi(r.Form.Get("rentPrice"))
+
+	query := "Insert into books(bookTitle, author, genre, year, page, rentPrice, coverPath)values(?,?,?,?,?,?,?)"
+
+	_, errQuery := db.Exec(query, title, author, genre, year, page, rentPrice, coverPath)
+
+	if errQuery != nil {
+		sendBadRequestResponse(w, "Bad Query")
+		return
+	}
+
+	sendSuccessResponseWithoutData(w, "Book has been inserted successfully")
 	// return
 }

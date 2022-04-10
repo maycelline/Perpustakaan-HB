@@ -109,12 +109,8 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
-	//ngurusin cookie nanti pokonya
-
-	//nampilin success info
-
-	//udah
-
+	resetUserToken(w)
+	sendSuccessResponseWithoutData(w, "Successfully log in")
 }
 
 func encodePassword(pass string) string {

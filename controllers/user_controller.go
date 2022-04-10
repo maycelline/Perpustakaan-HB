@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	_ "encoding/json"
-	"fmt"
 	_ "log"
 	"net/http"
 
@@ -22,7 +21,7 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	password := encodePassword(r.Form.Get("password"))
-	fmt.Println(password)
+	// fmt.Println(password)
 	userName := r.Form.Get("userName")
 
 	if password != "" && userName != "" {
@@ -32,19 +31,11 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 
 		rows := db.QueryRow(query, password, userName)
 		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
-			// log.Println(err.Error())
-			// response := errorTableField()
-			// w.Header().Set("Content-Type", "application/json")
-			// json.NewEncoder(w).Encode((response))
+			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		}
 
 		if user.FullName != "" {
-			// response := successUserInfoProcess()
-			// response.Data = GetAUserInfo(user)
-			// generateToken(w, user.ID, user.Name, user.UserType)
-			// w.Header().Set("Content-Type", "application/json")
-			// json.NewEncoder(w).Encode((response))
 			if user.UserType == "MEMBER" {
 				var member model.Member
 				member.User = user
@@ -53,6 +44,8 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				if err := rows.Scan(&member.Balance); err != nil {
 					return
 				}
+				generateMemberToken(w, member)
+				sendSuccessResponse(w, "Login Success", member)
 			} else if user.UserType == "ADMIN" {
 				var admin model.Admin
 				admin.User = user
@@ -61,8 +54,9 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				if err := rows.Scan(&admin.Branch.ID, &admin.Branch.Name, &admin.Branch.Address); err != nil {
 					return
 				}
+				generateAdminToken(w, admin)
+				sendSuccessResponse(w, "Login Success", admin)
 			} else {
-
 			}
 		} else {
 			// response := errorUserNotFound()

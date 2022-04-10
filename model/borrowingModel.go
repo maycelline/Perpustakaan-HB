@@ -7,4 +7,5 @@ type Borrowing struct {
 	Book       []Book    `json:"book"`
 	BorrowDate time.Time `json:"borrowDate"`
 	ReturnDate time.Time `json:"returnDate"`
+	Price      int       `json:"borrowPrice"`
 }

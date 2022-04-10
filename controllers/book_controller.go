@@ -2,12 +2,9 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
-	"context"
-	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
-
-	"github.com/go-redis/redis/v8"
 )
 
 func GetAllBooks(w http.ResponseWriter, r *http.Request) {
@@ -23,6 +20,8 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 
 	query := "SELECT a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c WHERE b.branchId = c.branchId AND c.branchName = '" + branchName + "'"
 
+	log.Println(query)
+
 	if bookTitle != "" {
 		query += " AND a.bookTitle = '" + bookTitle + "'"
 	} else if author != "" {
@@ -33,12 +32,11 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 		query += " AND a.year > " + strconv.Itoa(year)
 	} else if rentPrice != 0 {
 		query += " AND a.rentPrice > " + strconv.Itoa(rentPrice)
-	} else if branchName != "" {
-		query += " AND c.branchName = '" + branchName + "'"
 	}
 
 	rows, err := db.Query(query)
 	if err != nil {
+		log.Println(err)
 		sendNotFoundResponse(w, "Table Not Found")
 		return
 	}
@@ -63,56 +61,29 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	db.Close()
 }
 
-func GetPopularBook(w http.ResponseWriter, r *http.Request) {
-	db := connect()
-	defer db.Close()
+func GetPopularBooks(w http.ResponseWriter, r *http.Request) {
+	var book model.Book
+	var books []model.Book
 
-	query := "SELECT a.bookId, a.bookTitle, a.coverPath, a.author, a.genre, a.year FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN borrows c ON b.stockId = c.stockId GROUP BY b.bookId"
+	books = GetPopularBooksFromCache()
 
-	rows, err := db.Query(query)
-	if err != nil {
-		sendNotFoundResponse(w, "Table Not Found")
-		return
-	}
+	if books == nil {
+		db := connectGorm()
 
-	var book model.PopularBook
-	var books []model.PopularBook
-	for rows.Next() {
-		if err := rows.Scan(&book.ID, &book.Title, &book.CoverPath, &book.Author, &book.Genre, &book.Year); err != nil {
-			sendBadRequestResponse(w, "Error Field Undefined")
+		rows, err := db.Table("books").Limit(10).Select("books.bookId", "books.bookTitle", "books.author", "books.genre", "books.year", "books.coverPath").Joins("JOIN stocks ON books.bookId = stocks.stockId").Joins("JOIN borrowslist ON stocks.stockId = borrowslist.stockId GROUP BY stocks.bookId").Rows()
+
+		if err != nil {
+			log.Println(err)
+			sendNotFoundResponse(w, "Table Not Found")
 			return
-		} else {
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			rows.Scan(&book.ID, &book.Title, &book.Author, &book.Genre, &book.Year, &book.CoverPath)
 			books = append(books, book)
 		}
+		SetPopularBooksCache(books)
 	}
-
-	converted, err := json.Marshal(books)
-	if err != nil {
-		sendBadRequestResponse(w, "Error JSON Undefined")
-		return
-	}
-
-	ctx := context.Background()
-
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-
-	err = client.Set(ctx, "popular", converted, 0).Err()
-	if err != nil {
-		sendBadRequestResponse(w, "Error Redis Undefined")
-		return
-	}
-
-	value, err := client.Get(ctx, "popular").Result()
-	if err != nil {
-		sendBadRequestResponse(w, "Error Redis Undefined")
-		return
-	}
-
-	_ = json.Unmarshal([]byte(value), &books)
-
 	sendSuccessResponse(w, "Get Success", books)
 }

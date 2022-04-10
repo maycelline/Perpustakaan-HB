@@ -70,6 +70,6 @@ func CreateNewBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendSuccessResponse(w, "Success", nil)
+	sendSuccessResponseWithoutData(w, "Book has been inserted successfully")
 	// return
 }

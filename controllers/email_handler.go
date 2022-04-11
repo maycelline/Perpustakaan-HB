@@ -7,7 +7,6 @@ import (
 	"Perpustakaan-HB/model"
 	"text/template"
 
-	"github.com/jasonlvhit/gocron"
 	"gopkg.in/gomail.v2"
 )
 
@@ -154,12 +153,15 @@ func WeeklyEmailScheduler() {
 
 	//Kode dari line 136 sampe 151 harus diganti sama function
 
-	scheduler := gocron.NewScheduler()
-	scheduler.Every(1).Week().Do(func() {
-		for i := 0; i < len(users); i++ {
-			go SendWeeklyEmail(users[i].Email)
-		}
-	})
-	<-scheduler.Start()
+	// scheduler := gocron.NewScheduler()
+	// scheduler.Every(1).Week().Do(func() {
+	// 	for i := 0; i < len(users); i++ {
+	// 		go SendWeeklyEmail(users[i].Email)
+	// 	}
+	// })
+	// <-scheduler.Start()
 
+	for i := 0; i < len(users); i++ {
+		SetScheduler(users[i].Email)
+	}
 }

@@ -5,12 +5,10 @@ import (
 	"encoding/hex"
 	_ "encoding/json"
 	"fmt"
-	_ "log"
+	"log"
 	"net/http"
 
 	"Perpustakaan-HB/model"
-
-	"github.com/jasonlvhit/gocron"
 	// "github.com/gorilla/mux"
 )
 
@@ -117,11 +115,8 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 		sendBadRequestResponse(w, "Password not match")
 	}
 
-	scheduler := gocron.NewScheduler()
-	scheduler.Every(1).Week().Do(func() {
-		SendWeeklyEmail(email)
-	})
-	<-scheduler.Start()
+	go SetScheduler(email)
+	SetUsersCache(nil)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
@@ -132,4 +127,35 @@ func UserLogout(w http.ResponseWriter, r *http.Request) {
 func encodePassword(pass string) string {
 	encodePass := md5.Sum([]byte(pass))
 	return hex.EncodeToString(encodePass[:])
+}
+
+func GetAllUsers() []model.User {
+	var users []model.User
+	users = GetUsersFromCache()
+
+	if users == nil {
+		db := connect()
+		defer db.Close()
+
+		query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+
+		rows, err := db.Query(query)
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		var user model.User
+		for rows.Next() {
+			if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
+				log.Println(err.Error())
+				return nil
+			} else {
+				users = append(users, user)
+			}
+		}
+		SetUsersCache(users)
+	}
+
+	return users
 }

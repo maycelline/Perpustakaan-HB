@@ -40,8 +40,8 @@ func main() {
 
 	// Admin (2)
 	router.HandleFunc("/admin/home", controllers.Authenticate(controllers.GetAdminData, 2)).Methods("GET")
-	router.HandleFunc("/admin/borrowApprove", controllers.Authenticate(controllers.SeeUnapprovedBorrowing, 2)).Methods("GET")
-	router.HandleFunc("/admin/returnApprove", controllers.Authenticate(controllers.SeeUnapprovedReturn, 2)).Methods("GET")
+	router.HandleFunc("/admin/borrowApprove", controllers.Authenticate(controllers.GetUnapprovedBorrowing, 2)).Methods("GET")
+	router.HandleFunc("/admin/returnApprove", controllers.Authenticate(controllers.GetUnapprovedReturn, 2)).Methods("GET")
 	router.HandleFunc("/admin/chooseCourier/{borrow_id}", controllers.Authenticate(controllers.ChangeBorrowingState, 2)).Methods("PUT")
 	router.HandleFunc("/admin/addBook", controllers.Authenticate(controllers.CreateNewBook, 2)).Methods("POST")
 

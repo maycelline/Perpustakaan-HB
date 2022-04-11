@@ -31,7 +31,7 @@ func GetAdminData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SeeUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
+func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
@@ -100,7 +100,7 @@ func SeeUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func SeeUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
+func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
@@ -117,9 +117,7 @@ func SeeUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fmt.Println(branchId, "branch")
-
-	queryBorrow := "SELECT borrowId, returnDate FROM borrows WHERE borrowState = 'FINISHED'" //tar diganti
+	queryBorrow := "SELECT borrowId, returnDate FROM borrows WHERE borrowState = 'RETURN_PROCESS'"
 	rowsBorrow, err := db.Query(queryBorrow)
 
 	if err != nil {

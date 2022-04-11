@@ -62,7 +62,7 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPopularBooks(w http.ResponseWriter, r *http.Request) {
-	var books = popularBooks()
+	var books = PopularBooks()
 	if books == nil {
 		sendNotFoundResponse(w, "Query Error")
 	} else {
@@ -70,7 +70,7 @@ func GetPopularBooks(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func popularBooks() []model.Book {
+func PopularBooks() []model.Book {
 	var book model.Book
 	var books []model.Book
 

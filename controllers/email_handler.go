@@ -89,15 +89,17 @@ func parseTemplate(templateFileName string, data interface{}) (string, error) {
 	return buff.String(), nil
 }
 
-func SendWeeklyEmail(destinationAddress string, popularBooks model.PopularBooksEmail) {
+func SendWeeklyEmail(destinationEmailAddress string) {
 	mail := gomail.NewMessage()
-
 	template := "assets/email_template/weekly_news.html"
+
+	var popularBooks model.PopularBooksEmail
+	popularBooks.Books = PopularBooks()
 
 	result, _ := parseTemplate(template, popularBooks)
 
 	mail.SetHeader("From", "perpushb@gmail.com")
-	mail.SetHeader("To", destinationAddress)
+	mail.SetHeader("To", destinationEmailAddress)
 	mail.SetHeader("Subject", "Weekly Popular Books")
 	mail.SetBody("text/html", result)
 
@@ -106,10 +108,11 @@ func SendWeeklyEmail(destinationAddress string, popularBooks model.PopularBooksE
 	if err := sender.DialAndSend(mail); err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println("Email sent to " + destinationAddress)
+		fmt.Println("Email sent to " + destinationEmailAddress)
 	}
 }
 
+//function ini hanya dijalankan saat API baru dinyalakan untuk membuat scheduler bagi semua user
 func WeeklyEmailScheduler() {
 	//disini perlu ada panggil function untuk dapetin email dari semua address
 	var user1 model.User
@@ -151,18 +154,11 @@ func WeeklyEmailScheduler() {
 
 	//Kode dari line 136 sampe 151 harus diganti sama function
 
-	var popularBooksEmail model.PopularBooksEmail
-
-	popularBooksEmail.Books = books
-
 	scheduler := gocron.NewScheduler()
 	scheduler.Every(1).Week().Do(func() {
 		for i := 0; i < len(users); i++ {
-			popularBooksEmail.FullName = users[i].FullName
-			// fmt.Println("Email Sent to " + users[i].FullName)
-			SendWeeklyEmail(users[i].Email, popularBooksEmail)
+			go SendWeeklyEmail(users[i].Email)
 		}
-
 	})
 	<-scheduler.Start()
 

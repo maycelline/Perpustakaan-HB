@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -44,7 +45,8 @@ func SetPopularBooksCache(books []model.Book) {
 
 	var ctx = context.Background()
 
-	err = client.Set(ctx, "books", converted, 0).Err()
+	//Popular book direset setiap 1 minggu
+	err = client.Set(ctx, "books", converted, time.Duration(time.Monday)).Err()
 	if err != nil {
 		log.Println(err)
 		return

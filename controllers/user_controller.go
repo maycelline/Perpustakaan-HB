@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	_ "encoding/json"
 	"fmt"
-	_ "log"
+	"log"
 	"net/http"
 
 	"Perpustakaan-HB/model"
@@ -81,6 +81,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	fullName := r.Form.Get("fullName")
 	userName := r.Form.Get("userName")
 	phone := r.Form.Get("PhoneNumber")
+	email := r.Form.Get("Email")
 	address := r.Form.Get("Address")
 	additionalAddress := r.Form.Get("Additional Address")
 	password := r.Form.Get("password")
@@ -88,7 +89,17 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 	if password == confirmPass {
 		if fullName != "" && userName != "" && phone != "" && address != "" && password != "" {
-			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?,?,?,?,?,?,?,?,?)", fullName, userName, "", phone, address, additionalAddress, encodePassword(password), "MEMBER")
+			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?,?,?,?,?,?,?,?,?)",
+				fullName,
+				userName,
+				"", // belum beres kayanya
+				phone,
+				email,
+				address,
+				additionalAddress,
+				encodePassword(password),
+				"MEMBER",
+			)
 			tempId, _ := result1.LastInsertId()
 			_, errQuery2 := db.Exec("INSERT INTO members(id, balance) values (?,?)", tempId, 0)
 
@@ -104,6 +115,8 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 		sendBadRequestResponse(w, "Password not match")
 	}
 
+	go SetScheduler(email)
+	SetUsersCache(nil)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
@@ -114,4 +127,35 @@ func UserLogout(w http.ResponseWriter, r *http.Request) {
 func encodePassword(pass string) string {
 	encodePass := md5.Sum([]byte(pass))
 	return hex.EncodeToString(encodePass[:])
+}
+
+func GetAllUsers() []model.User {
+	var users []model.User
+	users = GetUsersFromCache()
+
+	if users == nil {
+		db := connect()
+		defer db.Close()
+
+		query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+
+		rows, err := db.Query(query)
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		var user model.User
+		for rows.Next() {
+			if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
+				log.Println(err.Error())
+				return nil
+			} else {
+				users = append(users, user)
+			}
+		}
+		SetUsersCache(users)
+	}
+
+	return users
 }

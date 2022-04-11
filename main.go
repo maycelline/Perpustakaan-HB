@@ -15,6 +15,9 @@ func main() {
 	// controllers.GetBranchIncome()
 	// controllers.WeeklyEmailScheduler()
 
+	//inisiasi scheduler untuk user yang telah terdaftar sebelum API dinyalakan
+	controllers.WeeklyEmailScheduler()
+
 	router := mux.NewRouter()
 
 	// General

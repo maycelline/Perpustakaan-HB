@@ -62,6 +62,15 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPopularBooks(w http.ResponseWriter, r *http.Request) {
+	var books = PopularBooks()
+	if books == nil {
+		sendNotFoundResponse(w, "Query Error")
+	} else {
+		sendSuccessResponse(w, "Get Success", books)
+	}
+}
+
+func PopularBooks() []model.Book {
 	var book model.Book
 	var books []model.Book
 
@@ -69,13 +78,11 @@ func GetPopularBooks(w http.ResponseWriter, r *http.Request) {
 
 	if books == nil {
 		db := connectGorm()
-
 		rows, err := db.Table("books").Limit(10).Select("books.bookId", "books.bookTitle", "books.author", "books.genre", "books.year", "books.coverPath").Joins("JOIN stocks ON books.bookId = stocks.stockId").Joins("JOIN borrowslist ON stocks.stockId = borrowslist.stockId GROUP BY stocks.bookId").Rows()
 
 		if err != nil {
 			log.Println(err)
-			sendNotFoundResponse(w, "Table Not Found")
-			return
+			return nil
 		}
 		defer rows.Close()
 
@@ -85,5 +92,5 @@ func GetPopularBooks(w http.ResponseWriter, r *http.Request) {
 		}
 		SetPopularBooksCache(books)
 	}
-	sendSuccessResponse(w, "Get Success", books)
+	return books
 }

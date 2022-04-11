@@ -22,6 +22,5 @@ type Book struct {
 }
 
 type PopularBooksEmail struct {
-	Books    []Book
-	FullName string
+	Books []Book
 }

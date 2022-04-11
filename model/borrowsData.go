@@ -3,9 +3,6 @@ package model
 import "time"
 
 type BorrowData struct {
-	// User   User   `json:"user"`
-	// Branch Branch `json:"branch"`
-	// Books  []Book `json:"books"`
 	Borrows  []Borrowing `json:"borrowings,omitempty"`
 	Couriers []Courier   `json:"couriers,omitempty"`
 }

@@ -48,7 +48,7 @@ func SendBorrowAcceptedEmail(destinationAddress string, data model.BorrowDataHTM
 	}
 }
 
-func SendBorrowRejectedEmail(destinationAddress string, data model.BorrowDataHTML) {
+func SendRetunAcceptedEmail(destinationAddress string, data model.BorrowDataHTML) {
 	mail := gomail.NewMessage()
 
 	template := "assets/email_template/reject_borrow_book.html"

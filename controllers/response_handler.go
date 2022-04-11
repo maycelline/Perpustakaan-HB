@@ -9,7 +9,7 @@ import (
 func sendSuccessResponse(w http.ResponseWriter, message string, value interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	var response model.SuccessResponse
-	response.Status = 200
+	response.Status = http.StatusOK
 	response.Message = message
 	response.Data = value
 	json.NewEncoder(w).Encode(response)
@@ -19,7 +19,7 @@ func sendBadRequestResponse(w http.ResponseWriter, errorMessage string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
 	var response model.ErrorResponse
-	response.Status = 400
+	response.Status = http.StatusBadRequest
 	response.Message = errorMessage
 	json.NewEncoder(w).Encode(response)
 }
@@ -28,7 +28,7 @@ func sendUnauthorizedResponse(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
 	var response model.ErrorResponse
-	response.Status = 401
+	response.Status = http.StatusUnauthorized
 	response.Message = "Unauthorized Access"
 	json.NewEncoder(w).Encode(response)
 }
@@ -37,16 +37,16 @@ func sendNotFoundResponse(w http.ResponseWriter, errorMessage string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
 	var response model.ErrorResponse
-	response.Status = 404
+	response.Status = http.StatusNotFound
 	response.Message = errorMessage
 	json.NewEncoder(w).Encode(response)
 }
 
 func sendServerErrorResponse(w http.ResponseWriter, errorMessage string) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(http.StatusInternalServerError)
 	var response model.ErrorResponse
-	response.Status = 500
+	response.Status = http.StatusInternalServerError
 	response.Message = errorMessage
 	json.NewEncoder(w).Encode(response)
 }
@@ -54,7 +54,7 @@ func sendServerErrorResponse(w http.ResponseWriter, errorMessage string) {
 func sendSuccessResponseWithoutData(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	var response model.SuccessResponse
-	response.Status = 200
+	response.Status = http.StatusOK
 	response.Message = message
 	json.NewEncoder(w).Encode(response)
 }

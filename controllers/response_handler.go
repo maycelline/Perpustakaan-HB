@@ -50,11 +50,3 @@ func sendServerErrorResponse(w http.ResponseWriter, errorMessage string) {
 	response.Message = errorMessage
 	json.NewEncoder(w).Encode(response)
 }
-
-func sendSuccessResponseWithoutData(w http.ResponseWriter, message string) {
-	w.Header().Set("Content-Type", "application/json")
-	var response model.SuccessResponse
-	response.Status = http.StatusOK
-	response.Message = message
-	json.NewEncoder(w).Encode(response)
-}

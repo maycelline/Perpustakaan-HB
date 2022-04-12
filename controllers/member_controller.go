@@ -9,7 +9,7 @@ import (
 	"Perpustakaan-HB/model"
 )
 
-func GetAUser(w http.ResponseWriter, r *http.Request) {
+func GetUserData(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
@@ -70,7 +70,7 @@ func AddBookToCart(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		sendNotFoundResponse(w, "Value Not Found")
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
@@ -124,7 +124,7 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		sendNotFoundResponse(w, "Value Not Found")
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
@@ -265,7 +265,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		sendNotFoundResponse(w, "Value Not Found")
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
@@ -322,7 +322,7 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		sendNotFoundResponse(w, "Value Not Found")
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
@@ -364,7 +364,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		sendNotFoundResponse(w, "Value Not Found")
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 

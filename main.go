@@ -29,6 +29,7 @@ func main() {
 	// Member (1)
 	router.HandleFunc("/book/list", controllers.Authenticate(controllers.GetAllBooks, 1)).Methods("GET")
 	router.HandleFunc("/member/cart", controllers.Authenticate(controllers.GetMemberCart, 1)).Methods("GET")
+	router.HandleFunc("/member/cart", controllers.Authenticate(controllers.AddBookToCart, 1)).Methods("POST")
 	router.HandleFunc("/member/borrowing/checkout", controllers.Authenticate(controllers.CreateBorrowingList, 1)).Methods("POST")
 	router.HandleFunc("/member/return", controllers.Authenticate(controllers.GetOngoingBorrowing, 1)).Methods("GET")
 	router.HandleFunc("/member/profile", controllers.Authenticate(controllers.GetAUser, 1)).Methods("GET")

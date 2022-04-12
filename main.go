@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"Perpustakaan-HB/controllers"
-	// _ "github.com/go-sql-driver/mysql"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
@@ -29,9 +29,10 @@ func main() {
 	// Member (1)
 	router.HandleFunc("/book/list", controllers.Authenticate(controllers.GetAllBooks, 1)).Methods("GET")
 	router.HandleFunc("/member/cart", controllers.Authenticate(controllers.GetMemberCart, 1)).Methods("GET")
+	router.HandleFunc("/member/cart", controllers.Authenticate(controllers.AddBookToCart, 1)).Methods("POST")
 	router.HandleFunc("/member/borrowing/checkout", controllers.Authenticate(controllers.CreateBorrowingList, 1)).Methods("POST")
 	router.HandleFunc("/member/return", controllers.Authenticate(controllers.GetOngoingBorrowing, 1)).Methods("GET")
-	router.HandleFunc("/member/profile", controllers.Authenticate(controllers.GetAUser, 1)).Methods("GET")
+	router.HandleFunc("/member/profile", controllers.Authenticate(controllers.GetUserData, 1)).Methods("GET")
 	router.HandleFunc("/member/profile/edit", controllers.Authenticate(controllers.EditUserProfile, 1)).Methods("PUT")
 	router.HandleFunc("/member/password/edit", controllers.Authenticate(controllers.EditUserPassword, 1)).Methods("PUT")
 	router.HandleFunc("/member/topup", controllers.Authenticate(controllers.TopupUserBalance, 1)).Methods("POST")
@@ -43,7 +44,7 @@ func main() {
 	router.HandleFunc("/admin/borrowApprove", controllers.Authenticate(controllers.GetUnapprovedBorrowing, 2)).Methods("GET")
 	router.HandleFunc("/admin/returnApprove", controllers.Authenticate(controllers.GetUnapprovedReturn, 2)).Methods("GET")
 	router.HandleFunc("/admin/chooseCourier/{borrow_id}", controllers.Authenticate(controllers.ChangeBorrowingState, 2)).Methods("PUT")
-	router.HandleFunc("/admin/addBook", controllers.Authenticate(controllers.CreateNewBook, 2)).Methods("POST")
+	router.HandleFunc("/admin/addBook", controllers.Authenticate(controllers.AddNewBook, 2)).Methods("POST")
 
 	// Owner (3)
 	// router.HandleFunc("/owner/home", controllers.Authenticate(controllers.GetOwnerData, 3)).Methods("GET")

@@ -25,12 +25,12 @@ func GetAdminData(w http.ResponseWriter, r *http.Request) {
 
 	if err := row.Scan(&user.FullName, &branch.ID, &branch.Name, &branch.Address); err != nil {
 		log.Println(err)
-		sendBadRequestResponse(w, "Bad Query")
+		sendBadRequestResponse(w, "Error Field Undefined")
 	} else {
 		var admin model.Admin
 		admin.User = user
 		admin.Branch = branch
-		sendSuccessResponse(w, "Success", admin)
+		sendSuccessResponse(w, "Get Success", admin)
 	}
 }
 
@@ -47,7 +47,7 @@ func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 
 	if err := row.Scan(&branchId); err != nil {
 		log.Println(err)
-		sendBadRequestResponse(w, "Bad Query")
+		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	}
 
@@ -95,11 +95,11 @@ func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var borrowdata model.BorrowData
-	borrowdata.Borrows = borrowings
-	borrowdata.Couriers = couriers
+	var borrowData model.BorrowData
+	borrowData.Borrows = borrowings
+	borrowData.Couriers = couriers
 
-	sendSuccessResponse(w, "Success!", borrowdata)
+	sendSuccessResponse(w, "Approve Success", borrowData)
 
 }
 
@@ -162,11 +162,11 @@ func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var borrowdata model.BorrowData
-	borrowdata.Borrows = borrowings
-	borrowdata.Couriers = couriers
+	var borrowData model.BorrowData
+	borrowData.Borrows = borrowings
+	borrowData.Couriers = couriers
 
-	sendSuccessResponse(w, "Success!", borrowdata)
+	sendSuccessResponse(w, "Approve Success", borrowData)
 }
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
@@ -174,9 +174,8 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	err := r.ParseForm()
-
 	if err != nil {
-		sendServerErrorResponse(w, "Internal Server Error!")
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
@@ -186,34 +185,33 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 	borrowId := vars["borrow_id"]
 
 	if len(stateType) <= 0 || len(couriedId) <= 0 {
-		sendBadRequestResponse(w, "Please input state type and courier id")
+		sendBadRequestResponse(w, "Value Not Found")
 		return
 	}
 
 	result, err := db.Exec("UPDATE borrows SET borrowState = ? WHERE borrowId=?", stateType, borrowId)
 
 	if err != nil {
-		sendBadRequestResponse(w, "Bad Query")
+		sendBadRequestResponse(w, "Error Can Not Change")
 		return
 	} else {
 		num, _ := result.RowsAffected()
 		if num == 0 {
 			sendServerErrorResponse(w, "This order's state already in "+strings.ToLower(stateType))
 		} else {
-			sendSuccessResponseWithoutData(w, "State changed to "+strings.ToLower(stateType))
+			sendSuccessResponse(w, "State changed to "+strings.ToLower(stateType), nil)
 			getAllDataForTransactionEmail(borrowId, stateType, couriedId)
 		}
 	}
 }
 
-func CreateNewBook(w http.ResponseWriter, r *http.Request) {
+func AddNewBook(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
 	err := r.ParseForm()
-
 	if err != nil {
-		sendServerErrorResponse(w, "Internal Server Error!")
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
@@ -225,16 +223,16 @@ func CreateNewBook(w http.ResponseWriter, r *http.Request) {
 	page, _ := strconv.Atoi(r.Form.Get("page"))
 	rentPrice, _ := strconv.Atoi(r.Form.Get("rentPrice"))
 
-	query := "Insert into books(bookTitle, author, genre, year, page, rentPrice, coverPath)values(?,?,?,?,?,?,?)"
+	query := "INSERT INTO books(bookTitle, author, genre, year, page, rentPrice, coverPath) VALUES (?, ?, ?, ?, ?, ?, ?)"
 
 	_, errQuery := db.Exec(query, title, author, genre, year, page, rentPrice, coverPath)
 
 	if errQuery != nil {
-		sendBadRequestResponse(w, "Bad Query")
+		sendBadRequestResponse(w, "Error Can Not Insert")
 		return
 	}
 
-	sendSuccessResponseWithoutData(w, "Book has been inserted successfully")
+	sendSuccessResponse(w, "Insert Success", nil)
 }
 
 func getAllDataForTransactionEmail(borrowId string, borrowState string, courierId string) {
@@ -255,7 +253,7 @@ func getAllDataForTransactionEmail(borrowId string, borrowState string, courierI
 
 	for rowsBook.Next() {
 		if err := rowsBook.Scan(&book.Title, &book.Author); err != nil {
-			log.Fatal(err.Error())
+			log.Println(err)
 			return
 		} else {
 			books = append(books, book)

@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"Perpustakaan-HB/model"
-	// "github.com/gorilla/mux"
 )
 
 func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +48,7 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				}
 				generateMemberToken(w, member)
 				sendSuccessResponse(w, "Login Success", member)
-			} else {
+			} else if user.UserType == "ADMIN" {
 				var admin model.Admin
 				admin.User = user
 				query = "SELECT branches.branchId, branches.branchName, branches.branchAddress FROM admins JOIN branches WHERE admins.adminId = ? AND admins.branchId = branches.branchId"
@@ -59,9 +58,12 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				}
 				generateAdminToken(w, admin)
 				sendSuccessResponse(w, "Login Success", admin)
+			} else {
+				generateOwnerToken(w, user)
+				sendSuccessResponse(w, "Login Success", user)
 			}
 		} else {
-			sendNotFoundResponse(w, "User not found")
+			sendNotFoundResponse(w, "User Not Found")
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Field Undefined")
@@ -80,19 +82,20 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 	fullName := r.Form.Get("fullName")
 	userName := r.Form.Get("userName")
-	phone := r.Form.Get("PhoneNumber")
-	email := r.Form.Get("Email")
-	address := r.Form.Get("Address")
-	additionalAddress := r.Form.Get("Additional Address")
+	birthDate := r.Form.Get("birthDate")
+	phone := r.Form.Get("phoneNumber")
+	email := r.Form.Get("email")
+	address := r.Form.Get("address")
+	additionalAddress := r.Form.Get("additionalAddress")
 	password := r.Form.Get("password")
-	confirmPass := r.Form.Get("password")
+	confirmPass := r.Form.Get("confirmPassword")
 
 	if password == confirmPass {
 		if fullName != "" && userName != "" && phone != "" && address != "" && password != "" {
-			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?,?,?,?,?,?,?,?,?)",
+			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 				fullName,
 				userName,
-				"", // belum beres kayanya
+				birthDate, // belum beres kayanya
 				phone,
 				email,
 				address,
@@ -104,15 +107,15 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 			_, errQuery2 := db.Exec("INSERT INTO members(id, balance) values (?,?)", tempId, 0)
 
 			if errQuery1 != nil && errQuery2 != nil {
-				sendBadRequestResponse(w, "Bad Query")
+				sendBadRequestResponse(w, "Error Can Not Register")
 			} else {
-				sendSuccessResponseWithoutData(w, "User successfully created")
+				sendSuccessResponse(w, "Register Success", nil)
 			}
 		} else {
-			sendBadRequestResponse(w, "Must insert all form")
+			sendBadRequestResponse(w, "Error Missing Values")
 		}
 	} else {
-		sendBadRequestResponse(w, "Password not match")
+		sendBadRequestResponse(w, "Error Password Does Not Match")
 	}
 
 	go SetScheduler(email)
@@ -121,7 +124,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
 	resetUserToken(w)
-	sendSuccessResponseWithoutData(w, "Logout Success")
+	sendSuccessResponse(w, "Logout Success", nil)
 }
 
 func encodePassword(pass string) string {
@@ -148,7 +151,7 @@ func GetAllUsers() []model.User {
 		var user model.User
 		for rows.Next() {
 			if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
-				log.Println(err.Error())
+				log.Println(err)
 				return nil
 			} else {
 				users = append(users, user)

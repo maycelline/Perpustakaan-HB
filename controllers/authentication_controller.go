@@ -100,6 +100,41 @@ func generateAdminToken(w http.ResponseWriter, admin model.Admin) {
 	})
 }
 
+func generateOwnerToken(w http.ResponseWriter, owner model.User) {
+	tokenExpiryTime := time.Now().Add(5 * time.Minute)
+
+	claims := &Claims{
+		ID:                owner.ID,
+		FullName:          owner.FullName,
+		UserName:          owner.UserName,
+		BirthDate:         owner.BirthDate,
+		PhoneNumber:       owner.PhoneNumber,
+		Email:             owner.Email,
+		Address:           owner.Address,
+		AdditionalAddress: owner.AdditionalAddress,
+		Password:          owner.Password,
+		UserType:          owner.UserType,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: tokenExpiryTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString(jwtKey)
+	if err != nil {
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     tokenName,
+		Value:    signedToken,
+		Expires:  tokenExpiryTime,
+		Secure:   false,
+		HttpOnly: true,
+		Path:     "/",
+	})
+}
+
 func resetUserToken(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     tokenName,

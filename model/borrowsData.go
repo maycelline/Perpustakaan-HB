@@ -3,8 +3,8 @@ package model
 import "time"
 
 type BorrowData struct {
-	Borrows  []Borrowing `json:"borrowing"`
-	Couriers []Courier   `json:"courier"`
+	Borrows  []Borrowing `json:"borrowings,omitempty"`
+	Couriers []Courier   `json:"couriers,omitempty"`
 }
 
 type BorrowDataHTML struct {

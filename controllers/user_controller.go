@@ -5,11 +5,10 @@ import (
 	"encoding/hex"
 	_ "encoding/json"
 	"fmt"
-	_ "log"
+	"log"
 	"net/http"
 
 	"Perpustakaan-HB/model"
-	// "github.com/gorilla/mux"
 )
 
 func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -18,12 +17,14 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
+		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
 
 	password := encodePassword(r.Form.Get("password"))
-	fmt.Println(password)
 	userName := r.Form.Get("userName")
+	fmt.Println(password)
+	fmt.Println(userName)
 
 	if password != "" && userName != "" {
 		query := "SELECT * FROM users WHERE password = ? AND username = ?"
@@ -31,20 +32,12 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 		var user model.User
 
 		rows := db.QueryRow(query, password, userName)
-		if err := rows.Scan(&user.ID, &user.FullName, &user.Username, &user.BirthDate, &user.Phone, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
-			// log.Println(err.Error())
-			// response := errorTableField()
-			// w.Header().Set("Content-Type", "application/json")
-			// json.NewEncoder(w).Encode((response))
+		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
+			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		}
 
 		if user.FullName != "" {
-			// response := successUserInfoProcess()
-			// response.Data = GetAUserInfo(user)
-			// generateToken(w, user.ID, user.Name, user.UserType)
-			// w.Header().Set("Content-Type", "application/json")
-			// json.NewEncoder(w).Encode((response))
 			if user.UserType == "MEMBER" {
 				var member model.Member
 				member.User = user
@@ -53,6 +46,8 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				if err := rows.Scan(&member.Balance); err != nil {
 					return
 				}
+				generateMemberToken(w, member)
+				sendSuccessResponse(w, "Login Success", member)
 			} else if user.UserType == "ADMIN" {
 				var admin model.Admin
 				admin.User = user
@@ -61,18 +56,17 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				if err := rows.Scan(&admin.Branch.ID, &admin.Branch.Name, &admin.Branch.Address); err != nil {
 					return
 				}
+				generateAdminToken(w, admin)
+				sendSuccessResponse(w, "Login Success", admin)
 			} else {
-
+				generateOwnerToken(w, user)
+				sendSuccessResponse(w, "Login Success", user)
 			}
 		} else {
-			// response := errorUserNotFound()
-			// w.Header().Set("Content-Type", "application/json")
-			// json.NewEncoder(w).Encode((response))
+			sendNotFoundResponse(w, "User Not Found")
 		}
 	} else {
-		// response := errorEmptyForm()
-		// w.Header().Set("Content-Type", "application/json")
-		// json.NewEncoder(w).Encode((response))
+		sendBadRequestResponse(w, "Error Field Undefined")
 	}
 }
 
@@ -82,47 +76,89 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-
+		sendServerErrorResponse(w, "Internal Server Error")
+		return
 	}
 
 	fullName := r.Form.Get("fullName")
 	userName := r.Form.Get("userName")
-	phone := r.Form.Get("PhoneNumber")
-	address := r.Form.Get("Address")
-	additionalAddress := r.Form.Get("Additional Address")
+	birthDate := r.Form.Get("birthDate")
+	phone := r.Form.Get("phoneNumber")
+	email := r.Form.Get("email")
+	address := r.Form.Get("address")
+	additionalAddress := r.Form.Get("additionalAddress")
 	password := r.Form.Get("password")
-	confirmPass := r.Form.Get("password")
+	confirmPass := r.Form.Get("confirmPassword")
 
 	if password == confirmPass {
 		if fullName != "" && userName != "" && phone != "" && address != "" && password != "" {
-			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?,?,?,?,?,?,?,?,?)", fullName, userName, "", phone, address, additionalAddress, encodePassword(password))
+			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				fullName,
+				userName,
+				birthDate, // belum beres kayanya
+				phone,
+				email,
+				address,
+				additionalAddress,
+				encodePassword(password),
+				"MEMBER",
+			)
 			tempId, _ := result1.LastInsertId()
 			_, errQuery2 := db.Exec("INSERT INTO members(id, balance) values (?,?)", tempId, 0)
 
 			if errQuery1 != nil && errQuery2 != nil {
-
+				sendBadRequestResponse(w, "Error Can Not Register")
 			} else {
-
+				sendSuccessResponse(w, "Register Success", nil)
 			}
 		} else {
-
+			sendBadRequestResponse(w, "Error Missing Values")
 		}
 	} else {
-
+		sendBadRequestResponse(w, "Error Password Does Not Match")
 	}
 
+	go SetScheduler(email)
+	SetUsersCache(nil)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
-	//ngurusin cookie nanti pokonya
-
-	//nampilin success info
-
-	//udah
-
+	resetUserToken(w)
+	sendSuccessResponse(w, "Logout Success", nil)
 }
 
 func encodePassword(pass string) string {
 	encodePass := md5.Sum([]byte(pass))
 	return hex.EncodeToString(encodePass[:])
+}
+
+func GetAllUsers() []model.User {
+	var users []model.User
+	users = GetUsersFromCache()
+
+	if users == nil {
+		db := connect()
+		defer db.Close()
+
+		query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+
+		rows, err := db.Query(query)
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		var user model.User
+		for rows.Next() {
+			if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
+				log.Println(err)
+				return nil
+			} else {
+				users = append(users, user)
+			}
+		}
+		SetUsersCache(users)
+	}
+
+	return users
 }

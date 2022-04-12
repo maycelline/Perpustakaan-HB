@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -76,5 +77,26 @@ func GetBranchIncome() /*w http.ResponseWriter, r *http.Request*/ {
 }
 
 func GetAllIncome(w http.ResponseWriter, r *http.Request) {
+	db := connect()
+	defer db.Close()
+
+	err := r.ParseForm()
+
+	month, _ := strconv.Atoi(r.Form.Get("month"))
+
+	if err != nil {
+
+		return
+	}
+
+	query := "Select sum(borrowPrice) as Income from borrows where extract(MONTH from borrowDate) = ? and borrowState = 'FINISHED'"
+
+	rows, errQuery := db.Query(query, month)
+
+	if errQuery != nil {
+		return
+	} else {
+		rows.Scan()
+	}
 
 }

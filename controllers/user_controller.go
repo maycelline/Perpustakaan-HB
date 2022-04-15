@@ -147,7 +147,7 @@ func GetAllUsers() []model.User {
 	db := connect()
 	defer db.Close()
 
-	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from userssdfsdf"
+	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
 
 	rows, err := db.Query(query)
 	if err != nil {

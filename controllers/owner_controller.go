@@ -11,10 +11,10 @@ func GetOwnerData(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
-	userId := r.URL.Query().Get("user_id")
-	query := "SELECT fullName FROM users WHERE userId = " + userId + "; "
+	userId := getIdFromCookies(r)
+	query := "SELECT fullName FROM users WHERE userId = ?"
 
-	row := db.QueryRow(query)
+	row := db.QueryRow(query, userId)
 
 	var user model.User
 

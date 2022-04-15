@@ -1,11 +1,11 @@
 package model
 
-import "time"
+// import "time"
 
 type MonthIncome struct {
-	Date       time.Time `json:"date"`
-	SumBorrows int       `json:"sumBorrow"`
-	Income     int       `json:"income"`
+	MonthName  string `json:"month"`
+	SumBorrows int    `json:"sumBorrow"`
+	Income     int    `json:"income"`
 }
 
 type Income struct {

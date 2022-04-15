@@ -1,13 +1,12 @@
 package controllers
 
 import (
+	"Perpustakaan-HB/model"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"Perpustakaan-HB/model"
 )
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {
@@ -469,7 +468,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 				sendSuccessResponse(w, "Delete Success", members)
 			}
 		} else {
-			sendBadRequestResponse(w, "Error Can Not Delete")
+			sendSuccessResponse(w, "Delete Success", members)
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Delete")

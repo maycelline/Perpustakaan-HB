@@ -46,9 +46,9 @@ func main() {
 	router.HandleFunc("/admin/addBook", controllers.Authenticate(controllers.AddNewBook, 2)).Methods("POST")
 
 	// Owner (3)
-	// router.HandleFunc("/owner/home", controllers.Authenticate(controllers.GetOwnerData, 3)).Methods("GET")
-	// router.HandleFunc("/owner/branchIncome", controllers.Authenticate(controllers.GetBranchIncome, 3)).Methods("GET")
-	// router.HandleFunc("/owner/income", controllers.Authenticate(controllers.GetAllIncome, 3)).Methods("GET")
+	router.HandleFunc("/owner/home", controllers.Authenticate(controllers.GetOwnerData, 3)).Methods("GET")
+	router.HandleFunc("/owner/branchIncome", controllers.Authenticate(controllers.GetBranchIncome, 3)).Methods("GET")
+	router.HandleFunc("/owner/income", controllers.Authenticate(controllers.GetAllIncome, 3)).Methods("GET")
 
 	// CORS
 	corsHandler := cors.New(cors.Options{

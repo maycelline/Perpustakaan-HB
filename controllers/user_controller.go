@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"Perpustakaan-HB/model"
 )
@@ -90,6 +92,40 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	confirmPass := r.Form.Get("confirmPassword")
 
+	passwordLength := len(password)
+
+	if passwordLength < 8 {
+		sendBadRequestResponse(w, "Need more character")
+		return
+	} else if passwordLength > 10 {
+		sendBadRequestResponse(w, "Too many character")
+		return
+	}
+
+	containsNumber := 0
+	for i := 0; i < 10; i++ {
+		number := strconv.Itoa(i)
+		if strings.Contains(password, number) {
+			containsNumber = containsNumber + 1
+		}
+	}
+
+	passwordCheck := strings.ToLower(password)
+	arrayPassword := []rune(passwordCheck)
+
+	containsLowerCase := 0
+	for i := 0; i < passwordLength; i++ {
+		char := string(arrayPassword)
+		if strings.Contains(password, char) {
+			containsLowerCase = containsLowerCase + 1
+		}
+	}
+
+	if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
+		sendBadRequestResponse(w, "Bad password")
+		return
+	}
+
 	if password == confirmPass {
 		if fullName != "" && userName != "" && phone != "" && address != "" && password != "" {
 			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -118,8 +154,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 		sendBadRequestResponse(w, "Error Password Does Not Match")
 	}
 
-	go SetScheduler(email)
-	SetUsersCache(nil)
+	SetScheduler(email)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
@@ -134,30 +169,36 @@ func encodePassword(pass string) string {
 
 func GetAllUsers() []model.User {
 	var users []model.User
-	users = GetUsersFromCache()
 
-	if users == nil {
-		db := connect()
-		defer db.Close()
+	// db := connectGorm()
+	// result := db.Find(&users)
 
-		query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+	// fmt.Println(result.RowsAffected)
 
-		rows, err := db.Query(query)
-		if err != nil {
+	// if result.Error != nil {
+	// 	log.Println(result.Error)
+	// 	return nil
+	// }
+
+	db := connect()
+	defer db.Close()
+
+	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	var user model.User
+	for rows.Next() {
+		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
 			log.Println(err)
 			return nil
+		} else {
+			users = append(users, user)
 		}
-
-		var user model.User
-		for rows.Next() {
-			if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
-				log.Println(err)
-				return nil
-			} else {
-				users = append(users, user)
-			}
-		}
-		SetUsersCache(users)
 	}
 
 	return users

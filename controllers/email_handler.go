@@ -124,7 +124,7 @@ func WeeklyEmailScheduler() {
 	// })
 	// <-scheduler.Start()
 
-	for i := 0; i < len(users); i++ {
-		go SetScheduler(users[i].Email)
+	for _, user := range users {
+		SetScheduler(user.Email)
 	}
 }

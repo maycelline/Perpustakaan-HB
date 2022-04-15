@@ -222,17 +222,28 @@ func AddNewBook(w http.ResponseWriter, r *http.Request) {
 	year, _ := strconv.Atoi(r.Form.Get("year"))
 	page, _ := strconv.Atoi(r.Form.Get("page"))
 	rentPrice, _ := strconv.Atoi(r.Form.Get("rentPrice"))
+	branchId, _ := strconv.Atoi(r.Form.Get("branchId"))
+	stock, _ := strconv.Atoi(r.Form.Get("stock"))
 
-	query := "INSERT INTO books(bookTitle, author, genre, year, page, rentPrice, coverPath) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	query1 := "INSERT INTO books(bookTitle, author, genre, year, page, rentPrice, coverPath) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	result, errQuery1 := db.Exec(query1, title, author, genre, year, page, rentPrice, coverPath)
 
-	_, errQuery := db.Exec(query, title, author, genre, year, page, rentPrice, coverPath)
-
-	if errQuery != nil {
-		sendBadRequestResponse(w, "Error Can Not Insert")
+	if errQuery1 != nil {
+		sendBadRequestResponse(w, "Error cannot add new book")
 		return
 	}
 
-	sendSuccessResponse(w, "Insert Success", nil)
+	bookId, _ := result.LastInsertId()
+	query2 := "Insert into stocks(bookId, brandId, stock) values(?,?,?)"
+
+	_, errQuery2 := db.Exec(query2, bookId, branchId, stock)
+
+	if errQuery2 != nil {
+		sendBadRequestResponse(w, "Error cannot add new book")
+		return
+	}
+
+	sendSuccessResponse(w, "Add book successfully", nil)
 }
 
 func getAllDataForTransactionEmail(borrowId string, borrowState string, courierId string) {

@@ -29,7 +29,8 @@ func main() {
 	// Member (1)
 	router.HandleFunc("/book/list", controllers.Authenticate(controllers.GetAllBooks, 1)).Methods("GET")
 	router.HandleFunc("/member/cart", controllers.Authenticate(controllers.GetMemberCart, 1)).Methods("GET")
-	router.HandleFunc("/member/cart", controllers.Authenticate(controllers.AddBookToCart, 1)).Methods("POST")
+	router.HandleFunc("/member/cart/add", controllers.Authenticate(controllers.AddBookToCart, 1)).Methods("POST")
+	router.HandleFunc("/member/cart/remove", controllers.Authenticate(controllers.RemoveBookFromCart, 1)).Methods("POST") // dapet data dari form cuma bisa kalau post
 	router.HandleFunc("/member/borrowing/checkout", controllers.Authenticate(controllers.CreateBorrowingList, 1)).Methods("POST")
 	router.HandleFunc("/member/return", controllers.Authenticate(controllers.GetOngoingBorrowing, 1)).Methods("GET")
 	router.HandleFunc("/member/profile", controllers.Authenticate(controllers.GetUserData, 1)).Methods("GET")

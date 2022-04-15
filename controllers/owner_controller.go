@@ -2,11 +2,9 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func GetOwnerData(w http.ResponseWriter, r *http.Request) {
@@ -28,75 +26,69 @@ func GetOwnerData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetBranchIncome() /*w http.ResponseWriter, r *http.Request*/ {
-	fmt.Println("1")
-	db := connect()
-	defer db.Close()
-	fmt.Println("2")
-	// branchId := r.URL.Query().Get("branch_id")
-	query := "SELECT borrows.borrowDate, borrows.borrowPrice FROM borrows JOIN borrowslist ON borrowslist.borrowId = borrows.borrowId JOIN stocks ON stock.stockId = borrowslist.stockId WHERE stocks.branchId = 1 ORDER BY borrows.borrowDate ASC; "
-
-	rows, err := db.Query(query)
-	if err != nil {
-
+func GetBranchIncome(w http.ResponseWriter, r *http.Request) {
+	branchId, _ := strconv.Atoi(r.URL.Query().Get("branch_id"))
+	incomes, err := GetIncome(branchId, w)
+	if err == nil {
+		sendSuccessResponse(w, "Success Get Income Data", incomes)
 	}
-
-	var borrow model.Borrowing
-	var borrows []model.Borrowing
-
-	for rows.Next() {
-		if err := rows.Scan(&borrow.BorrowDate, &borrow.Price); err != nil {
-			// log.Println(err)
-			// sendBadRequestResponse(w, "Bad Query")
-		} else {
-			borrows = append(borrows, borrow)
-		}
-	}
-
-	var month []time.Month
-	for i := 0; i < len(borrows); i++ {
-		checkMonth := 0
-		tempMonth := borrows[i].BorrowDate.Month()
-		for j := 0; j <= len(month)-1; j++ {
-			if month[j] == tempMonth {
-				break
-			} else {
-				checkMonth += 1
-			}
-		}
-		if checkMonth == len(month)-1 {
-			month[checkMonth+1] = tempMonth
-		}
-	}
-	fmt.Println(month)
-	// var month model.MonthIncome
-	// var arrIncome []model.MonthIncome
-	// var income model.Income
-
-	// sendSuccessResponse(w, "Success", user)
 }
 
+func GetIncome(branchId int, w http.ResponseWriter) ([]model.MonthIncome, error) {
+	db := connect()
+	defer db.Close()
+
+	query := "SELECT MONTHNAME(borrows.borrowDate), COUNT(borrowslist.borrowId), SUM(borrows.borrowPrice)FROM borrows JOIN borrowslist ON borrowslist.borrowId = borrows.borrowId JOIN stocks ON stocks.stockId = borrowslist.stockId WHERE stocks.branchId = ? GROUP BY stocks.branchId ORDER BY MONTH(borrows.borrowDate), stocks.branchId ASC"
+
+	rows, err := db.Query(query, branchId)
+	if err != nil {
+		sendBadRequestResponse(w, "Error Query Get Month Income")
+		return nil, err
+	}
+
+	var income model.MonthIncome
+	var incomes []model.MonthIncome
+
+	for rows.Next() {
+		if err := rows.Scan(&income.MonthName, &income.SumBorrows, &income.Income); err != nil {
+			sendBadRequestResponse(w, "Error Can't Fit Query Result")
+			return nil, err
+		} else {
+			incomes = append(incomes, income)
+		}
+	}
+	return incomes, nil
+}
 func GetAllIncome(w http.ResponseWriter, r *http.Request) {
 	db := connect()
 	defer db.Close()
 
-	err := r.ParseForm()
+	query := "SELECT branchId, branchName from branches"
 
-	month, _ := strconv.Atoi(r.Form.Get("month"))
+	rows, err := db.Query(query)
 
 	if err != nil {
-
-		return
+		sendBadRequestResponse(w, "Failed Get Branch Data")
 	}
 
-	query := "Select sum(borrowPrice) as Income from borrows where extract(MONTH from borrowDate) = ? and borrowState = 'FINISHED'"
+	var branch model.Branch
+	var incomesBranch []model.Income
+	var incomeBranch model.Income
+	var errTemp error
 
-	rows, errQuery := db.Query(query, month)
-
-	if errQuery != nil {
-		return
-	} else {
-		rows.Scan()
+	for rows.Next() {
+		if err := rows.Scan(&branch.ID, &branch.Name); err != nil {
+			sendBadRequestResponse(w, "Failed Fit Branch Query Result")
+		} else {
+			incomeBranch.BranchName = branch.Name
+			incomeBranch.IncomeMonth, errTemp = GetIncome(branch.ID, w)
+			incomesBranch = append(incomesBranch, incomeBranch)
+			if errTemp != nil {
+				break
+			}
+		}
 	}
-
+	if errTemp == nil {
+		sendSuccessResponse(w, "Success Get All Income", incomesBranch)
+	}
 }

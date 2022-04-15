@@ -2,15 +2,18 @@ package controllers
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"Perpustakaan-HB/model"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/joho/godotenv"
 )
 
-var jwtKey = []byte("PHBH13HarapanBangsaH1tz!!")
-var tokenName = "token"
+var _ = godotenv.Load()
+var jwtKey = []byte(os.Getenv("JWT_TOKEN"))
+var tokenName = os.Getenv("TOKEN_NAME")
 
 type Claims struct {
 	ID                int          `json:"idUser,omitempty"`

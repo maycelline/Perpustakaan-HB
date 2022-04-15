@@ -118,8 +118,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 		sendBadRequestResponse(w, "Error Password Does Not Match")
 	}
 
-	go SetScheduler(email)
-	SetUsersCache(nil)
+	SetScheduler(email)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
@@ -134,30 +133,36 @@ func encodePassword(pass string) string {
 
 func GetAllUsers() []model.User {
 	var users []model.User
-	users = GetUsersFromCache()
 
-	if users == nil {
-		db := connect()
-		defer db.Close()
+	// db := connectGorm()
+	// result := db.Find(&users)
 
-		query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+	// fmt.Println(result.RowsAffected)
 
-		rows, err := db.Query(query)
-		if err != nil {
+	// if result.Error != nil {
+	// 	log.Println(result.Error)
+	// 	return nil
+	// }
+
+	db := connect()
+	defer db.Close()
+
+	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	var user model.User
+	for rows.Next() {
+		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
 			log.Println(err)
 			return nil
+		} else {
+			users = append(users, user)
 		}
-
-		var user model.User
-		for rows.Next() {
-			if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
-				log.Println(err)
-				return nil
-			} else {
-				users = append(users, user)
-			}
-		}
-		SetUsersCache(users)
 	}
 
 	return users

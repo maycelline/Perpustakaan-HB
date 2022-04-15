@@ -13,7 +13,6 @@ import (
 
 func main() {
 	// controllers.GetBranchIncome()
-	// controllers.WeeklyEmailScheduler()
 
 	//inisiasi scheduler untuk user yang telah terdaftar sebelum API dinyalakan
 	controllers.WeeklyEmailScheduler()
@@ -53,7 +52,7 @@ func main() {
 
 	// CORS
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"http://phb.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowCredentials: true,
 	})

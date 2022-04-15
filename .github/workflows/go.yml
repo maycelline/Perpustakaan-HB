@@ -7,22 +7,19 @@ on:
     branches: [ master ]
 
 jobs:
-  ci:
+
+  build:
     runs-on: ubuntu-latest
-    services:
-      mysql-master:
-        image: mysql:5.7
-        ports:
-          - 3306/tcp
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: perpustakaanhb
-    
     steps:
-      - uses: actions/checkout@v3
-      - name: Install packages
-        run: 'npm ci'
-      - name: Setup Database
-        run: 'npm run migration'
-      - name: Run Tests
-        run: 'npm run test'
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...

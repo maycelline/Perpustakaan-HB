@@ -1,15 +1,15 @@
 package controllers
 
 import (
+	"Perpustakaan-HB/model"
 	"crypto/md5"
 	"encoding/hex"
 	_ "encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
 
-	"Perpustakaan-HB/model"
+	"github.com/dlclark/regexp2"
 )
 
 func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -125,16 +125,14 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	regex, err := regexp.Compile(`([a-zA-Z\d\S])([^\@$!%*?&]){8,10}`)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
+	// 	sendBadRequestResponse(w, "Bad password")
+	// 	return
+	// }
 
-	if err != nil {
-		fmt.Println(err.Error())
-		// if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
-		// 	sendBadRequestResponse(w, "Bad password")
-		// 	return
-	}
-
-	var checkPass = regex.MatchString(password)
+	var checkPass = checkPasswordValidation(password, w)
 
 	if password == confirmPass && checkPass {
 		if fullName != "" && userName != "" && phone != "" && address != "" && password != "" {
@@ -161,7 +159,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 			sendBadRequestResponse(w, "Error Missing Values")
 		}
 	} else {
-		sendBadRequestResponse(w, "Error Password Does Not Match")
+		return
 	}
 
 	SetScheduler(email)
@@ -212,4 +210,17 @@ func GetAllUsers() []model.User {
 	}
 
 	return users
+}
+
+func checkPasswordValidation(pass string, w http.ResponseWriter) bool {
+	regex, err := regexp2.Compile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)([^\@$!%*?&/^\s]){8,10}$`, 0)
+	if err != nil {
+		sendBadRequestResponse(w, "Regex Not Correct")
+		return false
+	}
+	checkPass, err := regex.MatchString(pass)
+	if err != nil {
+		sendBadRequestResponse(w, "Password Not Match Criteria")
+	}
+	return checkPass
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -389,37 +388,43 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 
 	userId, _, _, _, _, _, _, _, password, _ := getDataFromCookies(r)
 
-	passwordLength := len(password)
+	// passwordLength := len(password)
 
-	if passwordLength < 8 {
-		sendBadRequestResponse(w, "Need more character")
-		return
-	} else if passwordLength > 10 {
-		sendBadRequestResponse(w, "Too many character")
-		return
-	}
+	// if passwordLength < 8 {
+	// 	sendBadRequestResponse(w, "Need more character")
+	// 	return
+	// } else if passwordLength > 10 {
+	// 	sendBadRequestResponse(w, "Too many character")
+	// 	return
+	// }
 
-	containsNumber := 0
-	for i := 0; i < 10; i++ {
-		number := strconv.Itoa(i)
-		if strings.Contains(password, number) {
-			containsNumber = containsNumber + 1
-		}
-	}
+	// containsNumber := 0
+	// for i := 0; i < 10; i++ {
+	// 	number := strconv.Itoa(i)
+	// 	if strings.Contains(password, number) {
+	// 		containsNumber = containsNumber + 1
+	// 	}
+	// }
 
-	passwordCheck := strings.ToLower(password)
-	arrayPassword := []rune(passwordCheck)
+	// passwordCheck := strings.ToLower(password)
+	// arrayPassword := []rune(passwordCheck)
 
-	containsLowerCase := 0
-	for i := 0; i < passwordLength; i++ {
-		char := string(arrayPassword)
-		if strings.Contains(password, char) {
-			containsLowerCase = containsLowerCase + 1
-		}
-	}
+	// containsLowerCase := 0
+	// for i := 0; i < passwordLength; i++ {
+	// 	char := string(arrayPassword)
+	// 	if strings.Contains(password, char) {
+	// 		containsLowerCase = containsLowerCase + 1
+	// 	}
+	// }
 
-	if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
-		sendBadRequestResponse(w, "Bad password")
+	// if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
+	// 	sendBadRequestResponse(w, "Bad password")
+	// 	return
+	// }
+
+	checkPass := checkPasswordValidation(password, w)
+
+	if !checkPass {
 		return
 	}
 

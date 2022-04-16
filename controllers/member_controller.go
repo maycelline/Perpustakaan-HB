@@ -335,12 +335,20 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		fullName = r.Form.Get("fullName")
 	} else if userName != r.Form.Get("userName") {
 		userName = r.Form.Get("userName")
+		checkUname := checkUsernameValidation(userName, w)
+		if !checkUname {
+			return
+		}
 	} else if time.Time.String(birthDate) != r.Form.Get("birthDate") {
 		birthDate, _ = time.Parse("2020-01-01", r.Form.Get("birthDate"))
 	} else if phone != r.Form.Get("phone") {
 		phone = r.Form.Get("phone")
 	} else if email != r.Form.Get("email") {
 		email = r.Form.Get("email")
+		checkMail := chekcMailValidation(email, w)
+		if !checkMail {
+			return
+		}
 	} else if address != r.Form.Get("address") {
 		address = r.Form.Get("address")
 	} else if additionalAddress != r.Form.Get("additionalAddress") {

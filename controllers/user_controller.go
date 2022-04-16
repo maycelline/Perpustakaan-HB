@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/mail"
 
 	"github.com/dlclark/regexp2"
 )
@@ -133,9 +134,10 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	var checkPass = checkPasswordValidation(password, w)
-
-	if password == confirmPass && checkPass {
-		if fullName != "" && userName != "" && phone != "" && address != "" && password != "" {
+	var checkUname = checkUsernameValidation(userName, w)
+	var checkMail = chekcMailValidation(email, w)
+	if password == confirmPass && checkPass && checkUname && checkMail {
+		if fullName != "" && phone != "" && address != "" {
 			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 				fullName,
 				userName,
@@ -223,4 +225,27 @@ func checkPasswordValidation(pass string, w http.ResponseWriter) bool {
 		sendBadRequestResponse(w, "Password Not Match Criteria")
 	}
 	return checkPass
+}
+
+func checkUsernameValidation(username string, w http.ResponseWriter) bool {
+	regex, err := regexp2.Compile(`^(?=.*[a-zA-Z])(?=.*\d)([^\@$!%*?&/^\s]){4,16}$`, 0)
+	if err != nil {
+		sendBadRequestResponse(w, "Regex Not Correct")
+		return false
+	}
+	checkUname, err := regex.MatchString(username)
+	if err != nil {
+		sendBadRequestResponse(w, "Password Not Match Criteria")
+	}
+	return checkUname
+}
+
+func chekcMailValidation(email string, w http.ResponseWriter) bool {
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		sendBadRequestResponse(w, "Mail Not Correct")
+		return false
+	} else {
+		return true
+	}
 }

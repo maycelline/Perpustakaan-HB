@@ -126,8 +126,6 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	// if err != nil {
-	// 	fmt.Println(err.Error())
 	// if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
 	// 	sendBadRequestResponse(w, "Bad password")
 	// 	return

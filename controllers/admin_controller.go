@@ -53,7 +53,7 @@ func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(branchId, "branch")
 
-	queryBorrow := "SELECT borrowId, returnDate FROM borrows WHERE borrowState = 'BORROW_PROCESS'"
+	queryBorrow := "SELECT borrows.borrowId, borrows.returnDate FROM borrows JOIN borrowslist ON borrows.borrowId = borrowsList.borrowId WHERE borrowState = 'BORROW_PROCESS'"
 	rowsBorrow, err := db.Query(queryBorrow)
 
 	if err != nil {
@@ -120,7 +120,7 @@ func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	queryBorrow := "SELECT borrowId, returnDate FROM borrows WHERE borrowState = 'RETURN_PROCESS'"
+	queryBorrow := "SELECT borrows.borrowId, borrows.returnDate FROM borrows JOIN borrowslist ON borrows.borrowId = borrowslist.borrowId WHERE borrowState = 'RETURN_PROCESS'"
 	rowsBorrow, err := db.Query(queryBorrow)
 
 	if err != nil {

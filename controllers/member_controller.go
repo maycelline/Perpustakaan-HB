@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -336,12 +335,20 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		fullName = r.Form.Get("fullName")
 	} else if userName != r.Form.Get("userName") {
 		userName = r.Form.Get("userName")
+		checkUname := checkUsernameValidation(userName, w)
+		if !checkUname {
+			return
+		}
 	} else if time.Time.String(birthDate) != r.Form.Get("birthDate") {
 		birthDate, _ = time.Parse("2020-01-01", r.Form.Get("birthDate"))
 	} else if phone != r.Form.Get("phone") {
 		phone = r.Form.Get("phone")
 	} else if email != r.Form.Get("email") {
 		email = r.Form.Get("email")
+		checkMail := chekcMailValidation(email, w)
+		if !checkMail {
+			return
+		}
 	} else if address != r.Form.Get("address") {
 		address = r.Form.Get("address")
 	} else if additionalAddress != r.Form.Get("additionalAddress") {
@@ -389,37 +396,43 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 
 	userId, _, _, _, _, _, _, _, password, _ := getDataFromCookies(r)
 
-	passwordLength := len(password)
+	// passwordLength := len(password)
 
-	if passwordLength < 8 {
-		sendBadRequestResponse(w, "Need more character")
-		return
-	} else if passwordLength > 10 {
-		sendBadRequestResponse(w, "Too many character")
-		return
-	}
+	// if passwordLength < 8 {
+	// 	sendBadRequestResponse(w, "Need more character")
+	// 	return
+	// } else if passwordLength > 10 {
+	// 	sendBadRequestResponse(w, "Too many character")
+	// 	return
+	// }
 
-	containsNumber := 0
-	for i := 0; i < 10; i++ {
-		number := strconv.Itoa(i)
-		if strings.Contains(password, number) {
-			containsNumber = containsNumber + 1
-		}
-	}
+	// containsNumber := 0
+	// for i := 0; i < 10; i++ {
+	// 	number := strconv.Itoa(i)
+	// 	if strings.Contains(password, number) {
+	// 		containsNumber = containsNumber + 1
+	// 	}
+	// }
 
-	passwordCheck := strings.ToLower(password)
-	arrayPassword := []rune(passwordCheck)
+	// passwordCheck := strings.ToLower(password)
+	// arrayPassword := []rune(passwordCheck)
 
-	notContainsLowerCase := 0
-	for i := 0; i < passwordLength; i++ {
-		char := string(arrayPassword)
-		if !strings.Contains(password, char) {
-			notContainsLowerCase = notContainsLowerCase + 1
-		}
-	}
+	// containsLowerCase := 0
+	// for i := 0; i < passwordLength; i++ {
+	// 	char := string(arrayPassword)
+	// 	if strings.Contains(password, char) {
+	// 		containsLowerCase = containsLowerCase + 1
+	// 	}
+	// }
 
-	if containsNumber >= 3 || notContainsLowerCase >= 2 || passwordLength == containsNumber {
-		sendBadRequestResponse(w, "Bad password")
+	// if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
+	// 	sendBadRequestResponse(w, "Bad password")
+	// 	return
+	// }
+
+	checkPass := checkPasswordValidation(password, w)
+
+	if !checkPass {
 		return
 	}
 

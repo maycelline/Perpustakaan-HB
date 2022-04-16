@@ -1,16 +1,16 @@
 package controllers
 
 import (
+	"Perpustakaan-HB/model"
 	"crypto/md5"
 	"encoding/hex"
 	_ "encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
+	"net/mail"
 
-	"Perpustakaan-HB/model"
+	"github.com/dlclark/regexp2"
 )
 
 func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -92,42 +92,50 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	confirmPass := r.Form.Get("confirmPassword")
 
-	passwordLength := len(password)
+	// passwordLength := len(password)
 
-	if passwordLength < 8 {
-		sendBadRequestResponse(w, "Need more character")
-		return
-	} else if passwordLength > 10 {
-		sendBadRequestResponse(w, "Too many character")
-		return
-	}
+	// if passwordLength < 8 {
+	// 	sendBadRequestResponse(w, "Need more character")
+	// 	return
+	// } else if passwordLength > 10 {
+	// 	sendBadRequestResponse(w, "Too many character")
+	// 	return
+	// }
 
-	containsNumber := 0
-	for i := 0; i < 10; i++ {
-		number := strconv.Itoa(i)
-		if strings.Contains(password, number) {
-			containsNumber = containsNumber + 1
-		}
-	}
+	// containsNumber := 0
+	// for i := 0; i < 10; i++ {
+	// 	number := strconv.Itoa(i)
+	// 	if strings.Contains(password, number) {
+	// 		containsNumber = containsNumber + 1
+	// 	}
+	// }
 
-	passwordCheck := strings.ToLower(password)
-	arrayPassword := []rune(passwordCheck)
+	// passwordCheck := strings.ToLower(password)
+	// arrayPassword := []rune(passwordCheck)
 
-	notContainsLowerCase := 0
-	for i := 0; i < passwordLength; i++ {
-		char := string(arrayPassword)
-		if !strings.Contains(password, char) {
-			notContainsLowerCase = notContainsLowerCase + 1
-		}
-	}
+	// containsLowerCase := 0
+	// for i := 0; i < passwordLength; i++ {
+	// 	char := string(arrayPassword)
+	// 	if strings.Contains(password, char) {
+	// 		containsLowerCase = containsLowerCase + 1
+	// 	}
+	// }
 
-	if containsNumber >= 3 || notContainsLowerCase >= 2 || passwordLength == containsNumber {
-		sendBadRequestResponse(w, "Bad password")
-		return
-	}
+	// if containsNumber == 0 || containsLowerCase == 0 {
+	// 	sendBadRequestResponse(w, "Bad password")
+	// 	return
+	// }
 
-	if password == confirmPass {
-		if fullName != "" && userName != "" && phone != "" && address != "" && password != "" {
+	// if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
+	// 	sendBadRequestResponse(w, "Bad password")
+	// 	return
+	// }
+
+	var checkPass = checkPasswordValidation(password, w)
+	var checkUname = checkUsernameValidation(userName, w)
+	var checkMail = chekcMailValidation(email, w)
+	if password == confirmPass && checkPass && checkUname && checkMail {
+		if fullName != "" && phone != "" && address != "" {
 			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 				fullName,
 				userName,
@@ -151,7 +159,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 			sendBadRequestResponse(w, "Error Missing Values")
 		}
 	} else {
-		sendBadRequestResponse(w, "Error Password Does Not Match")
+		return
 	}
 
 	SetScheduler(email)
@@ -202,4 +210,40 @@ func GetAllUsers() []model.User {
 	}
 
 	return users
+}
+
+func checkPasswordValidation(pass string, w http.ResponseWriter) bool {
+	regex, err := regexp2.Compile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)([^\@$!%*?&/^\s]){8,10}$`, 0)
+	if err != nil {
+		sendBadRequestResponse(w, "Regex Not Correct")
+		return false
+	}
+	checkPass, err := regex.MatchString(pass)
+	if err != nil {
+		sendBadRequestResponse(w, "Password Not Match Criteria")
+	}
+	return checkPass
+}
+
+func checkUsernameValidation(username string, w http.ResponseWriter) bool {
+	regex, err := regexp2.Compile(`^(?=.*[a-zA-Z])(?=.*\d)([^\@$!%*?&/^\s]){4,16}$`, 0)
+	if err != nil {
+		sendBadRequestResponse(w, "Regex Not Correct")
+		return false
+	}
+	checkUname, err := regex.MatchString(username)
+	if err != nil {
+		sendBadRequestResponse(w, "Password Not Match Criteria")
+	}
+	return checkUname
+}
+
+func chekcMailValidation(email string, w http.ResponseWriter) bool {
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		sendBadRequestResponse(w, "Mail Not Correct")
+		return false
+	} else {
+		return true
+	}
 }

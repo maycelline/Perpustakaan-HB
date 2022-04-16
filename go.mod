@@ -23,4 +23,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-require github.com/rs/cors v1.8.2 // indirect
+require (
+	github.com/dlclark/regexp2 v1.4.0 // indirect
+	github.com/rs/cors v1.8.2 // indirect
+)

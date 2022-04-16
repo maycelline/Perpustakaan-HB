@@ -189,7 +189,7 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := db.Exec("UPDATE borrows SET borrowState = ? WHERE borrowId=?", stateType, borrowId)
+	result, err := db.Exec("UPDATE borrowslist SET borrowState = ? WHERE borrowId=?", stateType, borrowId)
 
 	if err != nil {
 		sendBadRequestResponse(w, "Error Can Not Change")

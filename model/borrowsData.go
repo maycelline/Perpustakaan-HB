@@ -10,7 +10,7 @@ type BorrowData struct {
 type BorrowDataHTML struct {
 	Branch      Branch
 	User        User
-	Borrows     []Borrowing
+	Books       []Book
 	Courier     Courier
 	CourierCome time.Time
 }

@@ -2,13 +2,16 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
+	// _ "github.com/lib/pq"
 )
 
 func GetAdminData(w http.ResponseWriter, r *http.Request) {
@@ -170,6 +173,7 @@ func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
+	// fmt.Print("masok")
 	db := connect()
 	defer db.Close()
 
@@ -181,31 +185,59 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 
 	stateType := r.Form.Get("stateType")
 	couriedId := r.Form.Get("courierId")
+	stockId := r.Form.Get("stockId")
 	vars := mux.Vars(r)
 	borrowId := vars["borrow_id"]
+	stockIds := strings.Split(stockId, ",")
+	deliveryFee := r.Form.Get("deliveryFee")
+	// fmt.Println("Deliv Fee: " + deliveryFee)
+
+	// state := true
+
+	var count int64 = 0
 
 	if len(stateType) <= 0 || len(couriedId) <= 0 {
-		sendBadRequestResponse(w, "Value Not Found")
+		sendBadRequestResponse(w, "Please input all fields")
 		return
 	}
 
-	result, err := db.Exec("UPDATE borrowslist SET borrowState = ? WHERE borrowId=?", stateType, borrowId)
-
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		sendBadRequestResponse(w, "Error Can Not Change")
-		return
-	} else {
-		num, _ := result.RowsAffected()
-		if num == 0 {
-			sendServerErrorResponse(w, "This order's state already in "+strings.ToLower(stateType))
+		log.Fatal(err)
+	}
+
+	result, err := tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
+
+	for i := 0; i < len(stockIds); i++ {
+		// fmt.Println(stockIds[i])
+		result, err = tx.ExecContext(ctx, "UPDATE borrowslist SET borrowState = ? WHERE borrowId=? AND stockId=?", stateType, borrowId, stockIds[i])
+		if err != nil {
+			tx.Rollback()
+			fmt.Println(err)
+			sendBadRequestResponse(w, "Error Can Not Change")
+			return
 		} else {
-			sendSuccessResponse(w, "State changed to "+strings.ToLower(stateType), nil)
-			getAllDataForTransactionEmail(borrowId, stateType, couriedId)
+			num, _ := result.RowsAffected()
+			if num != 0 {
+				count += num
+			}
 		}
 	}
+
+	if count == int64(len(stockIds)) {
+		tx.Commit()
+		sendSuccessResponse(w, "State changed to "+strings.ToLower(stateType), nil)
+		getAllDataForTransactionEmail(borrowId, stateType, couriedId, stockIds)
+	} else {
+		tx.Rollback()
+		sendServerErrorResponse(w, "Your stock id is not in the list ")
+	}
+
 }
 
 func AddNewBook(w http.ResponseWriter, r *http.Request) {
+
 	db := connect()
 	defer db.Close()
 
@@ -246,33 +278,103 @@ func AddNewBook(w http.ResponseWriter, r *http.Request) {
 	sendSuccessResponse(w, "Add book successfully", nil)
 }
 
-func getAllDataForTransactionEmail(borrowId string, borrowState string, courierId string) {
+func getAllDataForTransactionEmail(borrowId string, borrowState string, courierId string, booksId []string) {
+	fmt.Println("This function is for send email")
 	db := connect()
 	defer db.Close()
 
-	queryBooks := "SELECT books.bookTitle, books.author FROM borrowslist JOIN stocks ON borrowslist.stockId = stocks.stockId JOIN books ON books.bookId = stocks.bookId WHERE borrowslist.borrowId = ?"
+	// fmt.Println(booksId)
 
-	rowsBook, err := db.Query(queryBooks, borrowId)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
+	//Get Books Data
 	var book model.Book
 	var books []model.Book
 
-	for rowsBook.Next() {
-		if err := rowsBook.Scan(&book.Title, &book.Author); err != nil {
-			log.Println(err)
-			return
+	for i := 0; i < len(booksId); i++ {
+		query := "SELECT books.bookTitle, books.author FROM stocks JOIN books ON books.bookId = stocks.bookId WHERE stocks.stockId = ?"
+		row := db.QueryRow(query, booksId[i])
+		if err := row.Scan(&book.Title, &book.Author); err != nil {
+			fmt.Println("Book error: ")
+			fmt.Println(err)
 		} else {
 			books = append(books, book)
+			// return
 		}
 	}
 
-	fmt.Println(books)
+	//Get User Name and Email
+	var user model.User
+	query := "SELECT users.fullName,  users.email FROM borrows JOIN users ON borrows.memberId = users.userId WHERE borrows.borrowId = ?"
+	row := db.QueryRow(query, borrowId)
+	if err := row.Scan(&user.FullName, &user.Email); err != nil {
+		fmt.Println("user error: ")
+		fmt.Println(err)
+	}
 
+	//Get Courier
+	var courier model.Courier
+	query = "SELECT courierName FROM couriers WHERE courierId = ?"
+	row = db.QueryRow(query, courierId)
+	if err := row.Scan(&courier.CourierName); err != nil {
+		fmt.Println("courier error: ")
+		fmt.Println(err)
+	}
+
+	//Get Branch
+	var branch model.Branch
+	query = "SELECT branches.branchName, branches.branchAddress FROM borrows JOIN borrowslist ON borrows.borrowId = borrowslist.borrowId JOIN stocks ON borrowslist.stockId = stocks.stockId JOIN branches ON stocks.branchId = branches.branchId WHERE borrows.borrowId = ?"
+	row = db.QueryRow(query, borrowId)
+	if err := row.Scan(&branch.Name); err != nil {
+		fmt.Println("branch error: ")
+		fmt.Println(err)
+	}
+
+	fmt.Println("books: ", books)
+	fmt.Println("Courier: ", courier.CourierName)
+	fmt.Println("User: ", user.FullName)
+	fmt.Println("Branch: ", branch.Name)
+
+	//Prepare data for email
+	var data model.BorrowDataHTML
+	data.Books = books
+	data.Branch = branch
+	data.Courier = courier
+	data.User = user
+	data.CourierCome = time.Now()
+
+	if borrowState == "BORROWED" {
+		SendBorrowAcceptedEmail(data)
+	} else {
+		SendRetunAcceptedEmail(data)
+	}
+
+	//Get
+
+	// queryBooks := "SELECT books.bookTitle, books.author FROM stocks JOIN books ON books.bookId = stocks.bookId WHERE stocks.stockId = ?"
+
+	// rowsBook, err := db.Query(queryBooks, borrowId)
+
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+
+	// var book model.Book
+	// var books []model.Book
+
+	// for rowsBook.Next() {
+	// 	if err := rowsBook.Scan(&book.Title, &book.Author); err != nil {
+	// 		log.Println(err)
+	// 		return
+	// 	} else {
+	// 		books = append(books, book)
+	// 	}
+	// }
+
+	// for i := 0; i <= len(books); i++ {
+	// 	fmt.Println("Judul Buku ", i, ": ", books[i].Title)
+	// 	fmt.Println("Author: ", books[i].Author)
+	// 	fmt.Println()
+	// }
 	// var member model.Member
 	// var courier model.Courier
 

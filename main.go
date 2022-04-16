@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"Perpustakaan-HB/controllers"
+	controllers "Perpustakaan-HB/controllers"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -13,9 +13,6 @@ import (
 
 func main() {
 	// controllers.GetBranchIncome()
-
-	//inisiasi scheduler untuk user yang telah terdaftar sebelum API dinyalakan
-	controllers.WeeklyEmailScheduler()
 
 	router := mux.NewRouter()
 
@@ -64,4 +61,7 @@ func main() {
 	fmt.Println("Connected to port 8080")
 	log.Println("Connected to port 8080")
 	log.Fatal(http.ListenAndServe(":8080", handler))
+
+	//inisiasi scheduler untuk user yang telah terdaftar sebelum API dinyalakan
+	controllers.WeeklyEmailScheduler()
 }

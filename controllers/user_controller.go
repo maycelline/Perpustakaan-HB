@@ -176,7 +176,6 @@ func encodePassword(pass string) string {
 }
 
 func GetAllUsers() []model.User {
-	var users []model.User
 
 	// db := connectGorm()
 	// result := db.Find(&users)
@@ -199,7 +198,9 @@ func GetAllUsers() []model.User {
 		return nil
 	}
 
+	var users []model.User
 	var user model.User
+
 	for rows.Next() {
 		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
 			log.Println(err)

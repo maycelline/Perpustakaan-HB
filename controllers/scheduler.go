@@ -7,5 +7,5 @@ func SetScheduler(email string) {
 	scheduler.Every(1).Week().Do(func() {
 		SendWeeklyEmail(email)
 	})
-	<-scheduler.Start()
+	scheduler.Start()
 }

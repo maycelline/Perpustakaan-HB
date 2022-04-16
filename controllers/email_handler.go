@@ -116,15 +116,7 @@ func SendWeeklyEmail(destinationEmailAddress string) {
 func WeeklyEmailScheduler() {
 	var users []model.User = GetAllUsers()
 
-	// scheduler := gocron.NewScheduler()
-	// scheduler.Every(1).Week().Do(func() {
-	// 	for i := 0; i < len(users); i++ {
-	// 		go SendWeeklyEmail(users[i].Email)
-	// 	}
-	// })
-	// <-scheduler.Start()
-
-	for _, user := range users {
-		SetScheduler(user.Email)
+	for i := 0; i < len(users); i++ {
+		SetScheduler(users[i].Email)
 	}
 }

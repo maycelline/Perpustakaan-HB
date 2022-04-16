@@ -12,8 +12,6 @@ import (
 )
 
 func main() {
-	// controllers.GetBranchIncome()
-
 	//inisiasi scheduler untuk user yang telah terdaftar sebelum API dinyalakan
 	controllers.WeeklyEmailScheduler()
 

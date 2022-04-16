@@ -15,8 +15,8 @@
         <p>Your order has been accepted.</p>
         <p>Here are the books list: </p>
         <ul>
-        {{range .Borrows}}
-            <li>{{.Book.Title}} by {{.Book.Author}} borrowed at {{.BorrowDate}}</li>
+        {{range .Books}}
+            <li>{{.Title}} by {{.Author}}</li>
             <br>
         {{end}}
         </ul>

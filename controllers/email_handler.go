@@ -29,7 +29,7 @@ func SendRegisterEmail(destinationAddress string, user model.User) {
 	}
 }
 
-func SendBorrowAcceptedEmail(destinationAddress string, data model.BorrowDataHTML) {
+func SendBorrowAcceptedEmail(data model.BorrowDataHTML) {
 	mail := gomail.NewMessage()
 
 	template := "assets/email_template/accept_borrow_book.html"
@@ -37,7 +37,7 @@ func SendBorrowAcceptedEmail(destinationAddress string, data model.BorrowDataHTM
 	result, _ := parseTemplate(template, data)
 
 	mail.SetHeader("From", "perpushb@gmail.com")
-	mail.SetHeader("To", destinationAddress)
+	mail.SetHeader("To", data.User.Email)
 	mail.SetHeader("Subject", "Accepted Order")
 	mail.SetBody("text/html", result)
 
@@ -48,16 +48,16 @@ func SendBorrowAcceptedEmail(destinationAddress string, data model.BorrowDataHTM
 	}
 }
 
-func SendRetunAcceptedEmail(destinationAddress string, data model.BorrowDataHTML) {
+func SendRetunAcceptedEmail(data model.BorrowDataHTML) {
 	mail := gomail.NewMessage()
 
-	template := "assets/email_template/reject_borrow_book.html"
+	template := "assets/email_template/accept_return_book.html"
 
 	result, _ := parseTemplate(template, data)
 
 	mail.SetHeader("From", "perpushb@gmail.com")
-	mail.SetHeader("To", destinationAddress)
-	mail.SetHeader("Subject", "Rejected Order")
+	mail.SetHeader("To", data.User.Email)
+	mail.SetHeader("Subject", "Return Accepted")
 	mail.SetBody("text/html", result)
 
 	sender := gomail.NewDialer("smtp.gmail.com", 587, "perpushb@gmail.com", "PerpusHBH1tZ")

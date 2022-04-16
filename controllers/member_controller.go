@@ -350,15 +350,15 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 	passwordCheck := strings.ToLower(password)
 	arrayPassword := []rune(passwordCheck)
 
-	containsLowerCase := 0
+	notContainsLowerCase := 0
 	for i := 0; i < passwordLength; i++ {
 		char := string(arrayPassword)
-		if strings.Contains(password, char) {
-			containsLowerCase = containsLowerCase + 1
+		if !strings.Contains(password, char) {
+			notContainsLowerCase = notContainsLowerCase + 1
 		}
 	}
 
-	if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
+	if containsNumber >= 3 || notContainsLowerCase >= 2 || passwordLength == containsNumber {
 		sendBadRequestResponse(w, "Bad password")
 		return
 	}

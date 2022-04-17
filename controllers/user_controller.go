@@ -173,9 +173,10 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 		sendBadRequestResponse(w, "Your input not valid")
 		return
 	}
+  
 	sendSuccessResponse(w, "Register Success", nil)
 	go SendRegisterEmail(user)
-	SetEmailWeeklyScheduler(email)
+  SetEmailWeeklyScheduler(email)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {

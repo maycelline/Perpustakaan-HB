@@ -9,7 +9,7 @@ import (
 )
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	memberId := getIdFromCookies(r)
@@ -30,7 +30,7 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMemberCart(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	memberId := getIdFromCookies(r)
@@ -64,7 +64,7 @@ func GetMemberCart(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddBookToCart(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -111,7 +111,7 @@ func AddBookToCart(w http.ResponseWriter, r *http.Request) {
 }
 
 func RemoveBookFromCart(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -158,7 +158,7 @@ func intInSlice(a int, list []int) bool {
 }
 
 func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -286,7 +286,7 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetOngoingBorrowing(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	memberId := getIdFromCookies(r)
@@ -320,7 +320,7 @@ func GetOngoingBorrowing(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditUserProfile(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -385,7 +385,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditUserPassword(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -470,7 +470,7 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -514,7 +514,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteAccount(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	userId := getIdFromCookies(r)
@@ -554,7 +554,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	memberId := getIdFromCookies(r)

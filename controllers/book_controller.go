@@ -8,7 +8,7 @@ import (
 )
 
 func GetAllBooks(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	branchName := r.URL.Query().Get("branchName")

@@ -15,7 +15,7 @@ import (
 )
 
 func GetAdminData(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	adminId := getIdFromCookies(r)
@@ -38,7 +38,7 @@ func GetAdminData(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	adminId := getIdFromCookies(r)
@@ -107,7 +107,7 @@ func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	adminId := getIdFromCookies(r)
@@ -174,7 +174,7 @@ func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 	// fmt.Print("masok")
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -247,7 +247,7 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 
 func AddNewBook(w http.ResponseWriter, r *http.Request) {
 
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -289,7 +289,7 @@ func AddNewBook(w http.ResponseWriter, r *http.Request) {
 
 func getAllDataForTransactionEmail(borrowId string, borrowState string, courierId string, booksId []string) {
 	fmt.Println("This function is for send email")
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	//Get Books Data

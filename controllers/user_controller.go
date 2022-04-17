@@ -15,7 +15,7 @@ import (
 )
 
 func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -74,7 +74,7 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -173,10 +173,10 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 		sendBadRequestResponse(w, "Your input not valid")
 		return
 	}
-  
+
 	sendSuccessResponse(w, "Register Success", nil)
 	go SendRegisterEmail(user)
-  SetEmailWeeklyScheduler(email)
+	SetEmailWeeklyScheduler(email)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
@@ -191,7 +191,7 @@ func encodePassword(pass string) string {
 
 func GetAllUsers() []model.User {
 
-	// db := connectGorm()
+	// db := ConnectGorm()
 	// result := db.Find(&users)
 
 	// fmt.Println(result.RowsAffected)
@@ -201,7 +201,7 @@ func GetAllUsers() []model.User {
 	// 	return nil
 	// }
 
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType FROM users WHERE userType = 'MEMBER'"

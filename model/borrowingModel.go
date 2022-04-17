@@ -9,3 +9,8 @@ type Borrowing struct {
 	ReturnDate time.Time `json:"returnDate,omitempty"`
 	Price      int       `json:"borrowPrice,omitempty"`
 }
+
+type UserBorrowing struct {
+	UserData          User
+	UserBorrowingData []Borrowing
+}

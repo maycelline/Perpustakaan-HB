@@ -207,9 +207,10 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	result, err := tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
+	_, _ = tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
 
 	for i := 0; i < len(stockIds); i++ {
+
 		result, err = tx.ExecContext(ctx, "UPDATE borrowslist SET borrowState = ? WHERE borrowId=? AND stockId=?", stateType, borrowId, stockIds[i])
 		if err != nil {
 			tx.Rollback()

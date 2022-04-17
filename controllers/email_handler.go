@@ -48,7 +48,7 @@ func SendBorrowAcceptedEmail(data model.BorrowDataHTML) {
 	}
 }
 
-func SendRetunAcceptedEmail(data model.BorrowDataHTML) {
+func SendReturnAcceptedEmail(data model.BorrowDataHTML) {
 	mail := gomail.NewMessage()
 
 	template := "assets/email_template/accept_return_book.html"

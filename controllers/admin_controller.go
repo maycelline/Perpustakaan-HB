@@ -210,7 +210,6 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 	result, err := tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
 
 	for i := 0; i < len(stockIds); i++ {
-		// fmt.Println(stockIds[i])
 		result, err = tx.ExecContext(ctx, "UPDATE borrowslist SET borrowState = ? WHERE borrowId=? AND stockId=?", stateType, borrowId, stockIds[i])
 		if err != nil {
 			tx.Rollback()
@@ -220,6 +219,15 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 		} else {
 			num, _ := result.RowsAffected()
 			if num != 0 {
+				if stateType == "RETURNED" {
+					result, err = tx.ExecContext(ctx, "UPDATE stocks SET stock = stock + 1 WHERE stockId=?", stockIds[i])
+					if err != nil {
+						tx.Rollback()
+						log.Fatal(err)
+						sendBadRequestResponse(w, "Error: stock cannot be updated")
+						return
+					}
+				}
 				count += num
 			}
 		}
@@ -283,8 +291,6 @@ func getAllDataForTransactionEmail(borrowId string, borrowState string, courierI
 	db := connect()
 	defer db.Close()
 
-	// fmt.Println(booksId)
-
 	//Get Books Data
 	var book model.Book
 	var books []model.Book
@@ -297,7 +303,6 @@ func getAllDataForTransactionEmail(borrowId string, borrowState string, courierI
 			fmt.Println(err)
 		} else {
 			books = append(books, book)
-			// return
 		}
 	}
 
@@ -323,15 +328,10 @@ func getAllDataForTransactionEmail(borrowId string, borrowState string, courierI
 	var branch model.Branch
 	query = "SELECT branches.branchName, branches.branchAddress FROM borrows JOIN borrowslist ON borrows.borrowId = borrowslist.borrowId JOIN stocks ON borrowslist.stockId = stocks.stockId JOIN branches ON stocks.branchId = branches.branchId WHERE borrows.borrowId = ?"
 	row = db.QueryRow(query, borrowId)
-	if err := row.Scan(&branch.Name); err != nil {
+	if err := row.Scan(&branch.Name, &branch.Address); err != nil {
 		fmt.Println("branch error: ")
 		fmt.Println(err)
 	}
-
-	fmt.Println("books: ", books)
-	fmt.Println("Courier: ", courier.CourierName)
-	fmt.Println("User: ", user.FullName)
-	fmt.Println("Branch: ", branch.Name)
 
 	//Prepare data for email
 	var data model.BorrowDataHTML
@@ -339,43 +339,20 @@ func getAllDataForTransactionEmail(borrowId string, borrowState string, courierI
 	data.Branch = branch
 	data.Courier = courier
 	data.User = user
-	data.CourierCome = time.Now()
+
+	date := time.Now()
+	y, m, d := date.Date()
+
+	data.CourierCome = strconv.Itoa(d)
+	data.CourierCome += " "
+	data.CourierCome += m.String()
+	data.CourierCome += " "
+	data.CourierCome += strconv.Itoa(y)
 
 	if borrowState == "BORROWED" {
 		SendBorrowAcceptedEmail(data)
 	} else {
-		SendRetunAcceptedEmail(data)
+		SendReturnAcceptedEmail(data)
 	}
-
-	//Get
-
-	// queryBooks := "SELECT books.bookTitle, books.author FROM stocks JOIN books ON books.bookId = stocks.bookId WHERE stocks.stockId = ?"
-
-	// rowsBook, err := db.Query(queryBooks, borrowId)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	// var book model.Book
-	// var books []model.Book
-
-	// for rowsBook.Next() {
-	// 	if err := rowsBook.Scan(&book.Title, &book.Author); err != nil {
-	// 		log.Println(err)
-	// 		return
-	// 	} else {
-	// 		books = append(books, book)
-	// 	}
-	// }
-
-	// for i := 0; i <= len(books); i++ {
-	// 	fmt.Println("Judul Buku ", i, ": ", books[i].Title)
-	// 	fmt.Println("Author: ", books[i].Author)
-	// 	fmt.Println()
-	// }
-	// var member model.Member
-	// var courier model.Courier
 
 }

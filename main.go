@@ -13,6 +13,9 @@ import (
 
 func main() {
 	// controllers.GetBranchIncome()
+	//inisiasi scheduler untuk user yang telah terdaftar sebelum API dinyalakan
+	controllers.WeeklyEmailScheduler()
+	controllers.SetEmailBorrowingInfoScheduler()
 
 	router := mux.NewRouter()
 
@@ -62,6 +65,4 @@ func main() {
 	log.Println("Connected to port 8080")
 	log.Fatal(http.ListenAndServe(":8080", handler))
 
-	//inisiasi scheduler untuk user yang telah terdaftar sebelum API dinyalakan
-	controllers.WeeklyEmailScheduler()
 }

@@ -175,7 +175,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	sendSuccessResponse(w, "Register Success", nil)
 	go SendRegisterEmail(user)
-	SetScheduler(email)
+	SetEmailWeeklyScheduler(email)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +203,7 @@ func GetAllUsers() []model.User {
 	db := connect()
 	defer db.Close()
 
-	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType from users"
+	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType FROM users WHERE userType = 'MEMBER'"
 
 	rows, err := db.Query(query)
 	if err != nil {

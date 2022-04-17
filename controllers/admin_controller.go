@@ -207,7 +207,7 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	_, _ = tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
+	result, _ := tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
 
 	for i := 0; i < len(stockIds); i++ {
 
@@ -221,7 +221,7 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 			num, _ := result.RowsAffected()
 			if num != 0 {
 				if stateType == "RETURNED" {
-					result, err = tx.ExecContext(ctx, "UPDATE stocks SET stock = stock + 1 WHERE stockId=?", stockIds[i])
+					_, err = tx.ExecContext(ctx, "UPDATE stocks SET stock = stock + 1 WHERE stockId=?", stockIds[i])
 					if err != nil {
 						tx.Rollback()
 						log.Fatal(err)

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"github.com/dlclark/regexp2"
 )
@@ -92,6 +93,8 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	confirmPass := r.Form.Get("confirmPassword")
 
+	birthDateTime, _ := time.Parse("YYYY-MM-DD", birthDate)
+	var user model.User = model.User{FullName: fullName, UserName: userName, BirthDate: birthDateTime, PhoneNumber: phone, Email: email, Address: address, AdditionalAddress: additionalAddress, Password: password, UserType: "MEMBER"}
 	// passwordLength := len(password)
 
 	// if passwordLength < 8 {
@@ -134,6 +137,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	var checkPass = checkPasswordValidation(password, w)
 	var checkUname = checkUsernameValidation(userName, w)
 	var checkMail = chekcMailValidation(email, w)
+
 	if password == confirmPass && checkPass && checkUname && checkMail {
 		if fullName != "" && phone != "" && address != "" {
 			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -147,22 +151,32 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 				encodePassword(password),
 				"MEMBER",
 			)
-			tempId, _ := result1.LastInsertId()
-			_, errQuery2 := db.Exec("INSERT INTO members(id, balance) values (?,?)", tempId, 0)
+			if errQuery1 != nil {
+				log.Println(errQuery1)
+				sendBadRequestResponse(w, "Error Can Not Register, error query 1")
+				return
+			}
 
-			if errQuery1 != nil && errQuery2 != nil {
-				sendBadRequestResponse(w, "Error Can Not Register")
-			} else {
-				sendSuccessResponse(w, "Register Success", nil)
+			tempId, _ := result1.LastInsertId()
+			_, errQuery2 := db.Exec("INSERT INTO members(memberId, balance) values (?,?)", tempId, 0)
+
+			if errQuery2 != nil {
+				log.Println(errQuery2)
+				sendBadRequestResponse(w, "Error Can Not Register, error query 2")
+				return
 			}
 		} else {
 			sendBadRequestResponse(w, "Error Missing Values")
+			return
 		}
 	} else {
+		sendBadRequestResponse(w, "Your input not valid")
 		return
 	}
-
-	SetEmailWeeklyScheduler(email)
+  
+	sendSuccessResponse(w, "Register Success", nil)
+	go SendRegisterEmail(user)
+  SetEmailWeeklyScheduler(email)
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {

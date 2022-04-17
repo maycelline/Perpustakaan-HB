@@ -146,7 +146,7 @@ func WeeklyEmailScheduler() {
 }
 
 func CheckUserBorrowing() ([]model.UserBorrowing, bool) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	var users []model.User = GetAllUsers()

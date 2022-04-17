@@ -1,0 +1,37 @@
+name: PerpusHB CI
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+
+  codacy-analysis-cli:
+    name: Codacy Analysis CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: Run Codacy Analysis CLI
+        uses: codacy/codacy-analysis-cli-action@master
+
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+
+    - name: set up mysql
+      uses: mirromutth/mysql-action@v1.1
+      with:
+        mysql user: 'admin'
+        mysql password: 'admin'
+        mysql database: 'perpustakaanhb'
+    
+    - name: Test
+      run: go test -v main_test.go

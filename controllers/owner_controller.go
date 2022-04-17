@@ -8,7 +8,7 @@ import (
 )
 
 func GetOwnerData(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	userId := getIdFromCookies(r)
@@ -35,7 +35,7 @@ func GetBranchIncome(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetIncome(branchId int, w http.ResponseWriter) ([]model.MonthIncome, error) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	query := "SELECT MONTHNAME(borrows.borrowDate), COUNT(borrowslist.borrowId), SUM(borrows.borrowPrice)FROM borrows JOIN borrowslist ON borrowslist.borrowId = borrows.borrowId JOIN stocks ON stocks.stockId = borrowslist.stockId WHERE stocks.branchId = ? GROUP BY stocks.branchId ORDER BY MONTH(borrows.borrowDate), stocks.branchId ASC"
@@ -60,7 +60,7 @@ func GetIncome(branchId int, w http.ResponseWriter) ([]model.MonthIncome, error)
 	return incomes, nil
 }
 func GetAllIncome(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	query := "SELECT branchId, branchName from branches"

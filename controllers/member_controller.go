@@ -2,10 +2,13 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
+	"context"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +125,11 @@ func RemoveBookFromCart(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 	booksId := r.URL.Query()["bookId"]
-	branchName := r.Form.Get("branchName")
+
+	vars := mux.Vars(r)
+	branchName := vars["branch_name"]
+
+	log.Println(branchName)
 
 	var stocks = make([]int, len(booksId))
 
@@ -232,13 +239,19 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 
 	var borrowId int
 
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for i := range stocks {
 		branchFound = intInSlice(branches[i], branchExist)
 		if !branchFound {
 			branchExist = append(branchExist, branches[i])
-			result, errQuery := db.Exec("INSERT INTO borrows(memberId, borrowDate, returnDate, borrowPrice) VALUES (?, ?, ?, ?)", memberId, borrowDate, "0000-00-00 00:00:00", 0)
+			result, errQuery := tx.ExecContext(ctx, "INSERT INTO borrows(memberId, borrowDate, returnDate, borrowPrice) VALUES (?, ?, ?, ?)", memberId, borrowDate, "0000-00-00 00:00:00", 0)
 			if errQuery != nil {
-				// db.Exec("ROLLBACK TO beforeCheckpoint;")
+				tx.Rollback()
 				log.Println(errQuery)
 				sendBadRequestResponse(w, "Error Can Not Checkout")
 				return
@@ -250,30 +263,30 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 
 		borrowId = borrowList[branches[i]]
 
-		_, err = db.Exec("UPDATE stocks SET stock = ? WHERE stockId = ?", books[i].Stock-1, stocks[i])
+		_, err = tx.ExecContext(ctx, "UPDATE stocks SET stock = ? WHERE stockId = ?", books[i].Stock-1, stocks[i])
 		if err != nil {
-			// db.Exec("ROLLBACK TO beforeCheckpoint;")
+			tx.Rollback()
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		}
 
-		_, errQuery := db.Exec("UPDATE borrows SET borrowPrice = borrowPrice + ? WHERE borrowId = ?", books[i].RentPrice, borrowId)
+		_, errQuery := tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ? WHERE borrowId = ?", books[i].RentPrice, borrowId)
 		if errQuery != nil {
-			// db.Exec("ROLLBACK TO beforeCheckpoint;")
+			tx.Rollback()
 			log.Println(errQuery)
 			sendBadRequestResponse(w, "Error Can Not Checkout")
 			return
 		} else {
-			_, errQuery := db.Exec("INSERT INTO borrowslist VALUES (?, ?, ?)", borrowId, stocks[i], "BORROW_PROCESS")
+			_, errQuery := tx.ExecContext(ctx, "INSERT INTO borrowslist VALUES (?, ?, ?)", borrowId, stocks[i], "BORROW_PROCESS")
 			if errQuery != nil {
-				// db.Exec("ROLLBACK TO beforeCheckpoint;")
+				tx.Rollback()
 				log.Println(errQuery)
 				sendBadRequestResponse(w, "Error Can Not Checkout")
 				return
 			} else {
-				_, errQuery := db.Exec("DELETE FROM carts WHERE memberId = ? AND stockId = ?", memberId, stocks[i])
+				_, errQuery := tx.ExecContext(ctx, "DELETE FROM carts WHERE memberId = ? AND stockId = ?", memberId, stocks[i])
 				if errQuery != nil {
-					// db.Exec("ROLLBACK TO beforeCheckpoint;")
+					tx.Rollback()
 					log.Println(errQuery)
 					sendBadRequestResponse(w, "Error Can Not Checkout")
 					return

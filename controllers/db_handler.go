@@ -9,7 +9,7 @@ import (
 )
 
 func Connect() *sql.DB {
-	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/perpustakaanhb?parseTime=true&loc=Asia%2FJakarta")
+	db, err := sql.Open("mysql", "admin:admin@tcp(localhost:3306)/perpustakaanhb?parseTime=true&loc=Asia%2FJakarta")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -17,7 +17,7 @@ func Connect() *sql.DB {
 }
 
 func connectGorm() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:@tcp(localhost:3306)/perpustakaanhb?parseTime=true&loc=Asia%2FJakarta"), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open("admin:admin@tcp(localhost:3306)/perpustakaanhb?parseTime=true&loc=Asia%2FJakarta"), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}

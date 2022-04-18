@@ -35,7 +35,7 @@ func main() {
 	router.HandleFunc("/member/profile", controllers.Authenticate(controllers.GetUserData, 1)).Methods("GET")
 	router.HandleFunc("/member/profile/edit", controllers.Authenticate(controllers.EditUserProfile, 1)).Methods("PUT")
 	router.HandleFunc("/member/password/edit", controllers.Authenticate(controllers.EditUserPassword, 1)).Methods("PUT")
-	router.HandleFunc("/member/topup", controllers.Authenticate(controllers.TopupUserBalance, 1)).Methods("POST")
+	router.HandleFunc("/member/topup", controllers.Authenticate(controllers.TopupUserBalance, 1)).Methods("PUT")
 	router.HandleFunc("/member/delete", controllers.Authenticate(controllers.DeleteAccount, 1)).Methods("DELETE")
 	router.HandleFunc("/member/borrowHistory", controllers.Authenticate(controllers.GetMemberHistory, 1)).Methods("GET")
 

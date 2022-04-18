@@ -2,26 +2,25 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
-	"log"
 	"net/http"
 	"strconv"
 )
 
 func GetOwnerData(w http.ResponseWriter, r *http.Request) {
-	db := connectGorm()
+	// db := connectGorm()
 	// defer db.Close()
-
-	userId := getIdFromCookies(r)
-	row := db.Table("users").Select("fullName").Where("userId = ?", userId).Row()
-
 	var user model.User
+	user.ID, user.FullName, user.UserName, user.BirthDate, user.PhoneNumber, user.UserType, _, _, _, _ = getDataFromCookies(r)
+	// row := db.Table("users").Select("fullName").Where("userId = ?", userId).Row()
 
-	if err := row.Scan(&user.FullName); err != nil {
-		log.Println(err)
-		sendBadRequestResponse(w, "Bad Query")
-	} else {
-		sendSuccessResponse(w, "Success", user)
-	}
+	// var user model.User
+
+	// if err := row.Scan(&user.FullName, &user.BirthDate, &user.PhoneNumber, &user.); err != nil {
+	// 	log.Println(err)
+	// 	sendBadRequestResponse(w, "Bad Query")
+	// } else {
+	sendSuccessResponse(w, "Success", user)
+	// }
 }
 
 func GetBranchIncome(w http.ResponseWriter, r *http.Request) {

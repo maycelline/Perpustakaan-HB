@@ -450,27 +450,24 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	newBalance, _ := strconv.Atoi(r.Form.Get("balance"))
 	balance = balance + newBalance
 
-	result, errQuery := db.Exec("UPDATE users SET balance=? WHERE memberId=?", balance, userId)
-	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
+	result, errQuery := db.Exec("UPDATE members SET balance=? WHERE memberId=?", balance, userId)
+	rows := db.QueryRow("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()
 
 	var member model.Member
-	var members []model.Member
-	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
-			sendBadRequestResponse(w, "Error Field Undefined")
-			return
-		} else {
-			members = append(members, member)
-		}
+
+	err = rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance)
+	if err != nil {
+		sendBadRequestResponse(w, "Error Field Undefined")
+		return
 	}
 
 	if errQuery == nil {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
-			sendSuccessResponse(w, "Update Success", members)
+			sendSuccessResponse(w, "Update Success", member)
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Update")

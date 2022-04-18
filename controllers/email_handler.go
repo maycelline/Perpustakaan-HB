@@ -10,7 +10,7 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func SendRegisterEmail(destinationAddress string, user model.User) {
+func SendRegisterEmail(user model.User) {
 	mail := gomail.NewMessage()
 
 	template := "assets/email_template/register.html"
@@ -18,7 +18,7 @@ func SendRegisterEmail(destinationAddress string, user model.User) {
 	result, _ := parseTemplate(template, user)
 
 	mail.SetHeader("From", "perpushb@gmail.com")
-	mail.SetHeader("To", destinationAddress)
+	mail.SetHeader("To", user.Email)
 	mail.SetHeader("Subject", "Register Success!")
 	mail.SetBody("text/html", result)
 
@@ -146,7 +146,7 @@ func WeeklyEmailScheduler() {
 }
 
 func CheckUserBorrowing() ([]model.UserBorrowing, bool) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	var users []model.User = GetAllUsers()

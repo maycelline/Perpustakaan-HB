@@ -9,12 +9,13 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"github.com/dlclark/regexp2"
 )
 
 func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -73,7 +74,7 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -92,45 +93,8 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	confirmPass := r.Form.Get("confirmPassword")
 
-	// passwordLength := len(password)
-
-	// if passwordLength < 8 {
-	// 	sendBadRequestResponse(w, "Need more character")
-	// 	return
-	// } else if passwordLength > 10 {
-	// 	sendBadRequestResponse(w, "Too many character")
-	// 	return
-	// }
-
-	// containsNumber := 0
-	// for i := 0; i < 10; i++ {
-	// 	number := strconv.Itoa(i)
-	// 	if strings.Contains(password, number) {
-	// 		containsNumber = containsNumber + 1
-	// 	}
-	// }
-
-	// passwordCheck := strings.ToLower(password)
-	// arrayPassword := []rune(passwordCheck)
-
-	// containsLowerCase := 0
-	// for i := 0; i < passwordLength; i++ {
-	// 	char := string(arrayPassword)
-	// 	if strings.Contains(password, char) {
-	// 		containsLowerCase = containsLowerCase + 1
-	// 	}
-	// }
-
-	// if containsNumber == 0 || containsLowerCase == 0 {
-	// 	sendBadRequestResponse(w, "Bad password")
-	// 	return
-	// }
-
-	// if containsNumber == 0 || containsLowerCase == 0 || containsLowerCase == containsNumber {
-	// 	sendBadRequestResponse(w, "Bad password")
-	// 	return
-	// }
-
+	birthDateTime, _ := time.Parse("YYYY-MM-DD", birthDate)
+	var user model.User = model.User{FullName: fullName, UserName: userName, BirthDate: birthDateTime, PhoneNumber: phone, Email: email, Address: address, AdditionalAddress: additionalAddress, Password: password, UserType: "MEMBER"}
 	var checkPass = checkPasswordValidation(password, w)
 	var checkUname = checkUsernameValidation(userName, w)
 	var checkMail = checkMailValidation(email, w)
@@ -147,22 +111,31 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 				encodePassword(password),
 				"MEMBER",
 			)
+			if errQuery1 != nil {
+				log.Println(errQuery1)
+				sendBadRequestResponse(w, "Error Can Not Register, error query 1")
+				return
+			}
 
 			tempId, _ := result1.LastInsertId()
 			_, errQuery2 := db.Exec("INSERT INTO members(memberId, balance) values (?,?)", tempId, 0)
 
-			if errQuery1 != nil && errQuery2 != nil {
-				sendBadRequestResponse(w, "Error Can Not Register")
-			} else {
-				sendSuccessResponse(w, "Register Success", nil)
+			if errQuery2 != nil {
+				log.Println(errQuery2)
+				sendBadRequestResponse(w, "Error Can Not Register, error query 2")
+				return
 			}
 		} else {
 			sendBadRequestResponse(w, "Error Missing Values")
+			return
 		}
 	} else {
+		sendBadRequestResponse(w, "Your input not valid")
 		return
 	}
 
+	sendSuccessResponse(w, "Register Success", nil)
+	go SendRegisterEmail(user)
 	SetEmailWeeklyScheduler(email)
 }
 
@@ -177,7 +150,7 @@ func encodePassword(pass string) string {
 }
 
 func GetAllUsers() []model.User {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType FROM users WHERE userType = 'MEMBER'"
@@ -233,7 +206,6 @@ func checkMailValidation(email string, w http.ResponseWriter) bool {
 	if err != nil {
 		sendBadRequestResponse(w, "Mail Not Correct")
 		return false
-	} else {
-		return true
 	}
+	return true
 }

@@ -15,7 +15,7 @@ import (
 )
 
 func GetAdminData(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	adminId := getIdFromCookies(r)
@@ -38,7 +38,7 @@ func GetAdminData(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	adminId := getIdFromCookies(r)
@@ -107,19 +107,19 @@ func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	adminId := getIdFromCookies(r)
 	var branchId int
 
-	//Get Admin Branch -- Rencananya mau ditampilin per cabang
+	//Get Admin Branch
 	query := "SELECT branchId FROM admins WHERE adminId = " + strconv.Itoa(adminId) + "; "
 	row := db.QueryRow(query)
 
 	if err := row.Scan(&branchId); err != nil {
 		log.Println(err)
-		sendBadRequestResponse(w, "Bad Query")
+		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	}
 
@@ -173,7 +173,7 @@ func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -203,10 +203,9 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	_, _ = tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
+	tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ?", deliveryFee)
 
 	for i := 0; i < len(stockIds); i++ {
-
 		result, err := tx.ExecContext(ctx, "UPDATE borrowslist SET borrowState = ? WHERE borrowId=? AND stockId=?", stateType, borrowId, stockIds[i])
 		if err != nil {
 			tx.Rollback()
@@ -217,11 +216,11 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 			num, _ := result.RowsAffected()
 			if num != 0 {
 				if stateType == "RETURNED" {
-					result, err = tx.ExecContext(ctx, "UPDATE stocks SET stock = stock + 1 WHERE stockId=?", stockIds[i])
+					_, err = tx.ExecContext(ctx, "UPDATE stocks SET stock = stock + 1 WHERE stockId=?", stockIds[i])
 					if err != nil {
 						tx.Rollback()
 						log.Fatal(err)
-						sendBadRequestResponse(w, "Error: stock cannot be updated")
+						sendBadRequestResponse(w, "Error Stock Can Not Be Updated")
 						return
 					}
 				}
@@ -236,14 +235,13 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 		getAllDataForTransactionEmail(borrowId, stateType, couriedId, stockIds)
 	} else {
 		tx.Rollback()
-		sendServerErrorResponse(w, "Your stock id is not in the list ")
+		sendServerErrorResponse(w, "Error Stock ID is Not in the List ")
 	}
 
 }
 
 func AddNewBook(w http.ResponseWriter, r *http.Request) {
-
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	err := r.ParseForm()
@@ -266,7 +264,7 @@ func AddNewBook(w http.ResponseWriter, r *http.Request) {
 	result, errQuery1 := db.Exec(query1, title, author, genre, year, page, rentPrice, coverPath)
 
 	if errQuery1 != nil {
-		sendBadRequestResponse(w, "Error cannot add new book")
+		sendBadRequestResponse(w, "Error Can Not Add New Book")
 		return
 	}
 
@@ -276,16 +274,16 @@ func AddNewBook(w http.ResponseWriter, r *http.Request) {
 	_, errQuery2 := db.Exec(query2, bookId, branchId, stock)
 
 	if errQuery2 != nil {
-		sendBadRequestResponse(w, "Error cannot add new book")
+		sendBadRequestResponse(w, "Error Can Not Add New Book")
 		return
 	}
 
-	sendSuccessResponse(w, "Add book successfully", nil)
+	sendSuccessResponse(w, "Success Add Book", nil)
 }
 
 func getAllDataForTransactionEmail(borrowId string, borrowState string, courierId string, booksId []string) {
 	fmt.Println("This function is for send email")
-	db := connect()
+	db := Connect()
 	defer db.Close()
 
 	//Get Books Data

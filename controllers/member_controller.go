@@ -515,9 +515,9 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_, errQuery := db.Exec("DELETE FROM members WHERE id=?", userId)
+	_, errQuery := db.Exec("DELETE FROM members WHERE userId=?", userId)
 	if errQuery == nil {
-		result, errQuery := db.Exec("DELETE FROM users WHERE id=?", userId)
+		result, errQuery := db.Exec("DELETE FROM users WHERE memberId=?", userId)
 		num, _ := result.RowsAffected()
 		if errQuery == nil {
 			if num == 0 {

@@ -2,10 +2,13 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
+	"context"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func GetUserData(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +125,11 @@ func RemoveBookFromCart(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 	booksId := r.URL.Query()["bookId"]
-	branchName := r.Form.Get("branchName")
+
+	vars := mux.Vars(r)
+	branchName := vars["branch_name"]
+
+	log.Println(branchName)
 
 	var stocks = make([]int, len(booksId))
 
@@ -157,7 +164,7 @@ func intInSlice(a int, list []int) bool {
 	return false
 }
 
-func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
+func CheckoutBorrowing(w http.ResponseWriter, r *http.Request) {
 	db := Connect()
 	defer db.Close()
 
@@ -193,8 +200,6 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i, bookId := range booksId {
-		// _, err := db.Exec("START TRANSACTION; SAVEPOINT beforeCheckpoint;")
-		// if err == nil {
 		query := "SELECT a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN carts d ON b.stockId = d.stockId JOIN members e ON d.memberId = e.memberId WHERE a.bookId = ? AND e.memberId = ?"
 		row := db.QueryRow(query, bookId, memberId)
 		if err := row.Scan(&book.ID, &book.CoverPath, &book.Title, &book.Author, &book.Genre, &book.Year, &book.Page, &book.RentPrice, &book.Stock, &book.BranchName); err != nil {
@@ -232,13 +237,19 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 
 	var borrowId int
 
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for i := range stocks {
 		branchFound = intInSlice(branches[i], branchExist)
 		if !branchFound {
 			branchExist = append(branchExist, branches[i])
-			result, errQuery := db.Exec("INSERT INTO borrows(memberId, borrowDate, returnDate, borrowPrice) VALUES (?, ?, ?, ?)", memberId, borrowDate, "0000-00-00 00:00:00", 0)
+			result, errQuery := tx.ExecContext(ctx, "INSERT INTO borrows(memberId, borrowDate, returnDate, borrowPrice) VALUES (?, ?, ?, ?)", memberId, borrowDate, "0000-00-00 00:00:00", 0)
 			if errQuery != nil {
-				// db.Exec("ROLLBACK TO beforeCheckpoint;")
+				tx.Rollback()
 				log.Println(errQuery)
 				sendBadRequestResponse(w, "Error Can Not Checkout")
 				return
@@ -250,72 +261,80 @@ func CreateBorrowingList(w http.ResponseWriter, r *http.Request) {
 
 		borrowId = borrowList[branches[i]]
 
-		_, err = db.Exec("UPDATE stocks SET stock = ? WHERE stockId = ?", books[i].Stock-1, stocks[i])
+		_, err = tx.ExecContext(ctx, "UPDATE stocks SET stock = ? WHERE stockId = ?", books[i].Stock-1, stocks[i])
 		if err != nil {
-			// db.Exec("ROLLBACK TO beforeCheckpoint;")
+			tx.Rollback()
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		}
 
-		_, errQuery := db.Exec("UPDATE borrows SET borrowPrice = borrowPrice + ? WHERE borrowId = ?", books[i].RentPrice, borrowId)
-		if errQuery != nil {
-			// db.Exec("ROLLBACK TO beforeCheckpoint;")
-			log.Println(errQuery)
+		balance := balance - books[i].RentPrice
+		_, err2 := tx.ExecContext(ctx, "UPDATE members SET balance = ? WHERE memberId = ?", balance-books[i].RentPrice, memberId)
+		if err2 != nil {
+			tx.Rollback()
+			sendBadRequestResponse(w, "Error Field Undefined")
+			return
+		}
+
+		_, err3 := tx.ExecContext(ctx, "UPDATE borrows SET borrowPrice = borrowPrice + ? WHERE borrowId = ?", books[i].RentPrice, borrowId)
+		if err3 != nil {
+			tx.Rollback()
+			log.Println(err3)
 			sendBadRequestResponse(w, "Error Can Not Checkout")
 			return
-		} else {
-			_, errQuery := db.Exec("INSERT INTO borrowslist VALUES (?, ?, ?)", borrowId, stocks[i], "BORROW_PROCESS")
-			if errQuery != nil {
-				// db.Exec("ROLLBACK TO beforeCheckpoint;")
-				log.Println(errQuery)
-				sendBadRequestResponse(w, "Error Can Not Checkout")
-				return
-			} else {
-				_, errQuery := db.Exec("DELETE FROM carts WHERE memberId = ? AND stockId = ?", memberId, stocks[i])
-				if errQuery != nil {
-					// db.Exec("ROLLBACK TO beforeCheckpoint;")
-					log.Println(errQuery)
-					sendBadRequestResponse(w, "Error Can Not Checkout")
-					return
-				}
-			}
+		}
+
+		_, err4 := tx.ExecContext(ctx, "INSERT INTO borrowslist VALUES (?, ?, ?)", borrowId, stocks[i], "BORROW_PROCESS")
+		if err4 != nil {
+			tx.Rollback()
+			log.Println(err4)
+			sendBadRequestResponse(w, "Error Can Not Checkout")
+			return
+		}
+
+		_, err5 := tx.ExecContext(ctx, "DELETE FROM carts WHERE memberId = ? AND stockId = ?", memberId, stocks[i])
+		if err5 != nil {
+			tx.Rollback()
+			log.Println(err5)
+			sendBadRequestResponse(w, "Error Can Not Checkout")
+			return
 		}
 	}
+	tx.Commit()
 	sendSuccessResponse(w, "Checkout Success", books)
 	db.Close()
 }
 
-func GetOngoingBorrowing(w http.ResponseWriter, r *http.Request) {
+func ReturnBorrowing(w http.ResponseWriter, r *http.Request) {
 	db := Connect()
 	defer db.Close()
 
 	memberId := getIdFromCookies(r)
-
-	query := "SELECT a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' AND  f.memberId = ?"
-
-	rows, err := db.Query(query, memberId)
-	if err != nil {
-		sendNotFoundResponse(w, "Table Not Found")
-		return
-	}
+	booksId := r.URL.Query()["bookId"]
 
 	var book model.Book
 	var books []model.Book
-	for rows.Next() {
-		if err := rows.Scan(&book.ID, &book.CoverPath, &book.Title, &book.Author, &book.Genre, &book.Year, &book.Page, &book.RentPrice, &book.Stock, &book.BranchName); err != nil {
+	var stocks = make([]int, len(booksId))
+	var borrowId = make([]int, len(booksId))
+
+	for i, bookId := range booksId {
+		query := "SELECT b.stockId, d.borrowId, a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE a.bookId = ? AND e.memberId = ?"
+		row := db.QueryRow(query, bookId, memberId)
+		if err := row.Scan(&stocks[i], &borrowId[i], &book.ID, &book.CoverPath, &book.Title, &book.Author, &book.Genre, &book.Year, &book.Page, &book.RentPrice, &book.Stock, &book.BranchName); err != nil {
+			log.Println(err)
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
 			books = append(books, book)
 		}
-	}
 
-	if len(books) != 0 {
-		sendSuccessResponse(w, "Get Success", books)
-	} else {
-		sendBadRequestResponse(w, "Error Array Size Not Correct")
+		_, err := db.Exec("UPDATE borrowslist SET borrowState = 'RETURN_PROCESS' WHERE borrowId = ? AND stockId = ?", borrowId[i], stocks[i])
+		if err != nil {
+			sendBadRequestResponse(w, "Error Field Undefined")
+			return
+		}
 	}
-
+	sendSuccessResponse(w, "Return Success", books)
 	db.Close()
 }
 
@@ -345,7 +364,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		phone = r.Form.Get("phone")
 	} else if email != r.Form.Get("email") {
 		email = r.Form.Get("email")
-		checkMail := chekcMailValidation(email, w)
+		checkMail := checkMailValidation(email, w)
 		if !checkMail {
 			return
 		}
@@ -403,8 +422,6 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	password = encodePassword(password)
-
-	// pengecekan syarat password
 
 	result, errQuery := db.Exec("UPDATE users SET password=? WHERE memberId=?", password, userId)
 	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)

@@ -17,14 +17,14 @@ func TestCreateUser(t *testing.T) {
 
 	data := url.Values{}
 	data.Set("fullName", "Debora Lexandra")
-	data.Set("userName", "deboras")
+	data.Set("userName", "deboras123")
 	data.Set("birthDate", "2000-01-01")
 	data.Set("phoneNumber", "0853-1234-1234")
-	data.Set("email", "deboras@gail.com")
+	data.Set("email", "deboras@gmail.com")
 	data.Set("address", "Jalan Dago No. 12")
 	data.Set("additionalAddress", "Kota Bandung, Jawa Barat 40132")
-	data.Set("password", "passdeboras")
-	data.Set("confirmPassword", "passdeboras")
+	data.Set("password", "Deboras1")
+	data.Set("confirmPassword", "Deboras1")
 
 	req, err := http.NewRequest("POST", "/register", strings.NewReader(data.Encode()))
 	if err != nil {

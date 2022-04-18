@@ -8,13 +8,11 @@ import (
 )
 
 func GetOwnerData(w http.ResponseWriter, r *http.Request) {
-	db := Connect()
-	defer db.Close()
+	db := connectGorm()
+	// defer db.Close()
 
 	userId := getIdFromCookies(r)
-	query := "SELECT fullName FROM users WHERE userId = ?"
-
-	row := db.QueryRow(query, userId)
+	row := db.Table("users").Select("fullName").Where("userId = ?", userId).Row()
 
 	var user model.User
 
@@ -60,12 +58,9 @@ func GetIncome(branchId int, w http.ResponseWriter) ([]model.MonthIncome, error)
 	return incomes, nil
 }
 func GetAllIncome(w http.ResponseWriter, r *http.Request) {
-	db := Connect()
-	defer db.Close()
+	db := connectGorm()
 
-	query := "SELECT branchId, branchName from branches"
-
-	rows, err := db.Query(query)
+	rows, err := db.Table("branches").Select("branchId", "branchName").Rows()
 
 	if err != nil {
 		sendBadRequestResponse(w, "Failed Get Branch Data")
@@ -79,12 +74,14 @@ func GetAllIncome(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		if err := rows.Scan(&branch.ID, &branch.Name); err != nil {
 			sendBadRequestResponse(w, "Failed Fit Branch Query Result")
+			return
 		} else {
 			incomeBranch.BranchName = branch.Name
 			incomeBranch.IncomeMonth, errTemp = GetIncome(branch.ID, w)
 			incomesBranch = append(incomesBranch, incomeBranch)
 			if errTemp != nil {
-				break
+				sendBadRequestResponse(w, "Failed Fit Data Income")
+				return
 			}
 		}
 	}

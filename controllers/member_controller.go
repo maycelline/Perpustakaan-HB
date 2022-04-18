@@ -538,7 +538,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 
-	query := "SELECT e.borrowId, e.borrowDate, e.returnDate FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'FINISHED' AND  f.memberId = ?"
+	query := "SELECT e.borrowId, e.borrowDate, e.returnDate FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'RETURNED' AND  f.memberId = ?"
 
 	rows, err := db.Query(query, memberId)
 	if err != nil {
@@ -579,7 +579,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 	if len(borrowings) != 0 {
 		sendSuccessResponse(w, "Get Success", borrowings)
 	} else {
-		sendBadRequestResponse(w, "You have no borroeing history")
+		sendBadRequestResponse(w, "You have no borrowing history")
 	}
 
 	db.Close()

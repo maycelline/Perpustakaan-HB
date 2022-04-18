@@ -99,13 +99,12 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	var checkUname = checkUsernameValidation(userName, w)
 	var checkMail = checkMailValidation(email, w)
 	var memberId int
-
 	if password == confirmPass && checkPass && checkUname && checkMail {
 		if fullName != "" && phone != "" && address != "" {
 			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 				fullName,
 				userName,
-				birthDate, // belum beres kayanya
+				birthDate,
 				phone,
 				email,
 				address,
@@ -161,17 +160,6 @@ func encodePassword(pass string) string {
 }
 
 func GetAllUsers() []model.User {
-
-	// db := ConnectGorm()
-	// result := db.Find(&users)
-
-	// fmt.Println(result.RowsAffected)
-
-	// if result.Error != nil {
-	// 	log.Println(result.Error)
-	// 	return nil
-	// }
-
 	db := Connect()
 	defer db.Close()
 
@@ -194,7 +182,6 @@ func GetAllUsers() []model.User {
 			users = append(users, user)
 		}
 	}
-
 	return users
 }
 
@@ -229,7 +216,6 @@ func checkMailValidation(email string, w http.ResponseWriter) bool {
 	if err != nil {
 		sendBadRequestResponse(w, "Mail Not Correct")
 		return false
-	} else {
-		return true
 	}
+	return true
 }

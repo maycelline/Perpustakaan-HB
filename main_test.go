@@ -16,15 +16,15 @@ func TestCreateUser(t *testing.T) {
 	ensureTableExists(db)
 
 	data := url.Values{}
-	data.Set("fullName", "test fullName")
-	data.Set("userName", "testusername1")
+	data.Set("fullName", "Debora Lexandra")
+	data.Set("userName", "deboras123")
 	data.Set("birthDate", "2000-01-01")
-	data.Set("phoneNumber", "0853")
-	data.Set("email", "testemail@gmail.com")
-	data.Set("address", "test address")
-	data.Set("additionalAddress", "test additionalAddress")
-	data.Set("password", "Password1")
-	data.Set("confirmPassword", "Password1")
+	data.Set("phoneNumber", "0853-1234-1234")
+	data.Set("email", "deboras@gmail.com")
+	data.Set("address", "Jalan Dago No. 12")
+	data.Set("additionalAddress", "Kota Bandung, Jawa Barat 40132")
+	data.Set("password", "Deboras1")
+	data.Set("confirmPassword", "Deboras1")
 
 	req, err := http.NewRequest("POST", "/register", strings.NewReader(data.Encode()))
 	if err != nil {

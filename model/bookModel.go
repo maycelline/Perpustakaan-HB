@@ -1,11 +1,8 @@
 package model
 
-import "time"
-
 type Cart struct {
-	ID         int       `json:"idCart,omitempty"`
-	BorrowDate time.Time `json:"borrowDate,omitempty"`
-	Book       Book      `json:"book,omitempty"`
+	ID   int  `json:"idCart,omitempty"`
+	Book Book `json:"book,omitempty"`
 }
 
 type Book struct {

@@ -32,7 +32,7 @@ type Claims struct {
 }
 
 func generateMemberToken(w http.ResponseWriter, member model.Member) {
-	tokenExpiryTime := time.Now().Add(5 * time.Minute)
+	tokenExpiryTime := time.Now().Add(10 * time.Minute)
 
 	claims := &Claims{
 		ID:                member.User.ID,
@@ -68,7 +68,7 @@ func generateMemberToken(w http.ResponseWriter, member model.Member) {
 }
 
 func generateAdminToken(w http.ResponseWriter, admin model.Admin) {
-	tokenExpiryTime := time.Now().Add(5 * time.Minute)
+	tokenExpiryTime := time.Now().Add(10 * time.Minute)
 
 	claims := &Claims{
 		ID:                admin.User.ID,
@@ -104,7 +104,7 @@ func generateAdminToken(w http.ResponseWriter, admin model.Admin) {
 }
 
 func generateOwnerToken(w http.ResponseWriter, owner model.User) {
-	tokenExpiryTime := time.Now().Add(5 * time.Minute)
+	tokenExpiryTime := time.Now().Add(10 * time.Minute)
 
 	claims := &Claims{
 		ID:                owner.ID,

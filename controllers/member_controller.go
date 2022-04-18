@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,12 +15,15 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 
+	fmt.Println(memberId)
+
 	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?"
 
 	rows := db.QueryRow(query, memberId)
 
 	var member model.Member
 	if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
+		fmt.Println(err)
 		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	} else {
@@ -345,7 +349,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		phone = r.Form.Get("phone")
 	} else if email != r.Form.Get("email") {
 		email = r.Form.Get("email")
-		checkMail := chekcMailValidation(email, w)
+		checkMail := checkMailValidation(email, w)
 		if !checkMail {
 			return
 		}

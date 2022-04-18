@@ -116,10 +116,6 @@ func SendOverdueEmail(overdueInfo model.UserBorrowing) {
 	mail := gomail.NewMessage()
 	template := "assets/email_template/overdue_info.html"
 
-	//popular book diinisiasi disini agar user mendapat popular book terbaru
-	// var popularBooks model.PopularBooksEmail
-	// popularBooks.Books = PopularBooks()
-
 	result, _ := parseTemplate(template, overdueInfo)
 
 	mail.SetHeader("From", "perpushb@gmail.com")

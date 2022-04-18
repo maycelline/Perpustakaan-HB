@@ -192,6 +192,9 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 	deliveryFee := r.Form.Get("deliveryFee")
 	// fmt.Println("Deliv Fee: " + deliveryFee)
 
+	fmt.Println(stateType)
+	fmt.Println(couriedId)
+
 	// state := true
 
 	var count int64 = 0
@@ -237,6 +240,30 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 	if count == int64(len(stockIds)) {
 		tx.Commit()
 		sendSuccessResponse(w, "State changed to "+strings.ToLower(stateType), nil)
+		if stateType == "RETURNED" {
+			//Get User Balance
+			// var user model.User
+			var balance int
+			var memberId int
+			query := "SELECT members.balance, members.memberId from borrows JOIN members ON borrows.memberId = members.memberId WHERE borrowId = ?"
+
+			row := db.QueryRow(query, borrowId)
+			if err := row.Scan(&balance, &memberId); err != nil {
+				fmt.Println("Balance error: ")
+				fmt.Println(err)
+				return
+			} else {
+				_, err := db.Exec("UPDATE members SET balance = balance - ? WHERE memberId = ?", deliveryFee, memberId)
+
+				if err != nil {
+					fmt.Println("Update balance error: ")
+					fmt.Println(err)
+					return
+				}
+			}
+
+			fmt.Println(balance)
+		}
 		getAllDataForTransactionEmail(borrowId, stateType, couriedId, stockIds)
 	} else {
 		tx.Rollback()

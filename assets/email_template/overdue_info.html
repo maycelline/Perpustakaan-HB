@@ -10,20 +10,17 @@
         </style>
     </head>
     <body>
-        <h1>Overdue Borrowing!</h1>
+        <h1>Overdue Borrowing</h1>
         <p>Hi, {{.UserData.FullName}}.</p>
         <p>These are books that you haven't returned:</p>
-        
-        <ol>
-            {{range .UserBorrowingData}}
-            Books from {{.BorrowDate}} :
-            <ul>
-                {{range .Book}}
-                <li>{{.Title}} by {{.Author}}</li><br>
-                {{end}}
-            </ul>
+        {{range .UserBorrowingData}}
+        Books from {{.BorrowDate}} :
+        <ul>
+            {{range .Book}}
+            <li>{{.Title}} by {{.Author}}</li><br>
             {{end}}
-        </ol>
+        </ul>
+        {{end}}
         <p>Return all books up there to make a new borrowing</p>
         <h5>Best regards,</h5>
         <br>

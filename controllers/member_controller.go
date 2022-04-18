@@ -3,7 +3,6 @@ package controllers
 import (
 	"Perpustakaan-HB/model"
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -18,15 +17,12 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 
-	fmt.Println(memberId)
-
 	query := "SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?"
 
 	rows := db.QueryRow(query, memberId)
 
 	var member model.Member
 	if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
-		fmt.Println(err)
 		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	} else {
@@ -133,8 +129,6 @@ func RemoveBookFromCart(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	branchName := vars["branch_name"]
 
-	log.Println(branchName)
-
 	var stocks = make([]int, len(booksId))
 
 	for i, bookId := range booksId {
@@ -214,7 +208,6 @@ func CheckoutBorrowing(w http.ResponseWriter, r *http.Request) {
 		}
 
 		query2 := "SELECT b.stockId, b.branchId FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN carts d ON b.stockId = d.stockId JOIN members e ON d.memberId = e.memberId WHERE a.bookId = ? AND e.memberId = ?"
-		log.Println(query2)
 		row2 := db.QueryRow(query2, bookId, memberId)
 		if err := row2.Scan(&stocks[i], &branches[i]); err != nil {
 			log.Println(err)
@@ -224,7 +217,6 @@ func CheckoutBorrowing(w http.ResponseWriter, r *http.Request) {
 
 		totalBorrowPrice = totalBorrowPrice + books[i].RentPrice
 
-		log.Println("Stock: ", books[i].Stock)
 		if books[i].Stock <= 0 {
 			sendBadRequestResponse(w, "Error Stocks Unavailable")
 			return
@@ -587,7 +579,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 	if len(borrowings) != 0 {
 		sendSuccessResponse(w, "Get Success", borrowings)
 	} else {
-		sendBadRequestResponse(w, "Error Array Size Not Correct")
+		sendBadRequestResponse(w, "You have no borroeing history")
 	}
 
 	db.Close()

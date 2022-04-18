@@ -358,7 +358,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		phone = r.Form.Get("phone")
 	} else if email != r.Form.Get("email") {
 		email = r.Form.Get("email")
-		checkMail := chekcMailValidation(email, w)
+		checkMail := checkMailValidation(email, w)
 		if !checkMail {
 			return
 		}
@@ -450,8 +450,6 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	password = encodePassword(password)
-
-	// pengecekan syarat password
 
 	result, errQuery := db.Exec("UPDATE users SET password=? WHERE memberId=?", password, userId)
 	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)

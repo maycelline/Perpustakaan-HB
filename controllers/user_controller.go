@@ -133,13 +133,13 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 	var checkPass = checkPasswordValidation(password, w)
 	var checkUname = checkUsernameValidation(userName, w)
-	var checkMail = chekcMailValidation(email, w)
+	var checkMail = checkMailValidation(email, w)
 	if password == confirmPass && checkPass && checkUname && checkMail {
 		if fullName != "" && phone != "" && address != "" {
 			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 				fullName,
 				userName,
-				birthDate, // belum beres kayanya
+				birthDate,
 				phone,
 				email,
 				address,
@@ -147,8 +147,9 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 				encodePassword(password),
 				"MEMBER",
 			)
+
 			tempId, _ := result1.LastInsertId()
-			_, errQuery2 := db.Exec("INSERT INTO members(id, balance) values (?,?)", tempId, 0)
+			_, errQuery2 := db.Exec("INSERT INTO members(memberId, balance) values (?,?)", tempId, 0)
 
 			if errQuery1 != nil && errQuery2 != nil {
 				sendBadRequestResponse(w, "Error Can Not Register")
@@ -176,17 +177,6 @@ func encodePassword(pass string) string {
 }
 
 func GetAllUsers() []model.User {
-
-	// db := connectGorm()
-	// result := db.Find(&users)
-
-	// fmt.Println(result.RowsAffected)
-
-	// if result.Error != nil {
-	// 	log.Println(result.Error)
-	// 	return nil
-	// }
-
 	db := connect()
 	defer db.Close()
 
@@ -209,7 +199,6 @@ func GetAllUsers() []model.User {
 			users = append(users, user)
 		}
 	}
-
 	return users
 }
 
@@ -239,7 +228,7 @@ func checkUsernameValidation(username string, w http.ResponseWriter) bool {
 	return checkUname
 }
 
-func chekcMailValidation(email string, w http.ResponseWriter) bool {
+func checkMailValidation(email string, w http.ResponseWriter) bool {
 	_, err := mail.ParseAddress(email)
 	if err != nil {
 		sendBadRequestResponse(w, "Mail Not Correct")

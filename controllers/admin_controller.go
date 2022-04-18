@@ -173,7 +173,6 @@ func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
-	// fmt.Print("masok")
 	db := connect()
 	defer db.Close()
 
@@ -190,9 +189,6 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 	borrowId := vars["borrow_id"]
 	stockIds := strings.Split(stockId, ",")
 	deliveryFee := r.Form.Get("deliveryFee")
-	// fmt.Println("Deliv Fee: " + deliveryFee)
-
-	// state := true
 
 	var count int64 = 0
 
@@ -211,7 +207,7 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 
 	for i := 0; i < len(stockIds); i++ {
 
-		result, err = tx.ExecContext(ctx, "UPDATE borrowslist SET borrowState = ? WHERE borrowId=? AND stockId=?", stateType, borrowId, stockIds[i])
+		result, err := tx.ExecContext(ctx, "UPDATE borrowslist SET borrowState = ? WHERE borrowId=? AND stockId=?", stateType, borrowId, stockIds[i])
 		if err != nil {
 			tx.Rollback()
 			fmt.Println(err)

@@ -463,7 +463,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	newBalance, _ := strconv.Atoi(r.Form.Get("balance"))
 	balance = balance + newBalance
 
-	result, errQuery := db.Exec("UPDATE users SET balance=? WHERE memberId=?", balance, userId)
+	result, errQuery := db.Exec("UPDATE members SET balance=? WHERE memberId=?", balance, userId)
 	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	// _ "github.com/lib/pq"
 )
 
 func GetAdminData(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +101,7 @@ func GetUnapprovedBorrowing(w http.ResponseWriter, r *http.Request) {
 	borrowData.Borrows = borrowings
 	borrowData.Couriers = couriers
 
-	sendSuccessResponse(w, "Approve Success", borrowData)
+	sendSuccessResponse(w, "Get List of Borrow Books Success", borrowData)
 
 }
 
@@ -169,7 +168,7 @@ func GetUnapprovedReturn(w http.ResponseWriter, r *http.Request) {
 	borrowData.Borrows = borrowings
 	borrowData.Couriers = couriers
 
-	sendSuccessResponse(w, "Approve Success", borrowData)
+	sendSuccessResponse(w, "Get List of Return Books Success", borrowData)
 }
 
 func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
@@ -233,8 +232,6 @@ func ChangeBorrowingState(w http.ResponseWriter, r *http.Request) {
 		tx.Commit()
 		sendSuccessResponse(w, "State changed to "+strings.ToLower(stateType), nil)
 		if stateType == "RETURNED" {
-			//Get User Balance
-			// var user model.User
 			var balance int
 			var memberId int
 			query := "SELECT members.balance, members.memberId from borrows JOIN members ON borrows.memberId = members.memberId WHERE borrowId = ?"

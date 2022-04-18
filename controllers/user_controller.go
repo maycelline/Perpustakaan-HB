@@ -122,7 +122,6 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 			tempId, _ := result1.LastInsertId()
 			memberId = int(tempId)
-			fmt.Println("test: ", memberId)
 			_, errQuery2 := db.Exec("INSERT INTO members(memberId, balance) values (?,?)", tempId, 0)
 
 			if errQuery2 != nil {
@@ -142,7 +141,6 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 	member.User = user
 	member.User.ID = memberId
-	fmt.Println("user id: ", member.User.ID)
 	generateMemberToken(w, member)
 	sendSuccessResponse(w, "Register Success", nil)
 	go SendRegisterEmail(user)

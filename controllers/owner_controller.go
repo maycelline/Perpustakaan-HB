@@ -2,26 +2,25 @@ package controllers
 
 import (
 	"Perpustakaan-HB/model"
-	"log"
 	"net/http"
 	"strconv"
 )
 
 func GetOwnerData(w http.ResponseWriter, r *http.Request) {
-	db := connectGorm()
+	// db := connectGorm()
 	// defer db.Close()
-
-	userId := getIdFromCookies(r)
-	row := db.Table("users").Select("fullName").Where("userId = ?", userId).Row()
-
 	var user model.User
+	user.ID, user.FullName, user.UserName, user.BirthDate, user.PhoneNumber, user.UserType, _, _, _, _ = getDataFromCookies(r)
+	// row := db.Table("users").Select("fullName").Where("userId = ?", userId).Row()
 
-	if err := row.Scan(&user.FullName); err != nil {
-		log.Println(err)
-		sendBadRequestResponse(w, "Bad Query")
-	} else {
-		sendSuccessResponse(w, "Success", user)
-	}
+	// var user model.User
+
+	// if err := row.Scan(&user.FullName, &user.BirthDate, &user.PhoneNumber, &user.); err != nil {
+	// 	log.Println(err)
+	// 	sendBadRequestResponse(w, "Bad Query")
+	// } else {
+	sendSuccessResponse(w, "Success", user)
+	// }
 }
 
 func GetBranchIncome(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +35,7 @@ func GetIncome(branchId int, w http.ResponseWriter) ([]model.MonthIncome, error)
 	db := Connect()
 	defer db.Close()
 
-	query := "SELECT MONTHNAME(borrows.borrowDate), COUNT(borrowslist.borrowId), SUM(borrows.borrowPrice)FROM borrows JOIN borrowslist ON borrowslist.borrowId = borrows.borrowId JOIN stocks ON stocks.stockId = borrowslist.stockId WHERE stocks.branchId = ? GROUP BY stocks.branchId ORDER BY MONTH(borrows.borrowDate), stocks.branchId ASC"
+	query := "SELECT MONTHNAME(borrows.borrowDate), COUNT(borrowslist.borrowId), SUM(DISTINCT(borrows.borrowPrice)) FROM borrows JOIN borrowslist ON borrowslist.borrowId = borrows.borrowId JOIN stocks ON stocks.stockId = borrowslist.stockId WHERE stocks.branchId = ? GROUP BY borrowslist.borrowId, stocks.branchId ORDER BY MONTH(borrows.borrowDate), stocks.branchId ASC"
 
 	rows, err := db.Query(query, branchId)
 	if err != nil {
@@ -46,13 +45,29 @@ func GetIncome(branchId int, w http.ResponseWriter) ([]model.MonthIncome, error)
 
 	var income model.MonthIncome
 	var incomes []model.MonthIncome
+	var tempMonth string
+	tempMonth = ""
+	i := -1
 
 	for rows.Next() {
 		if err := rows.Scan(&income.MonthName, &income.SumBorrows, &income.Income); err != nil {
 			sendBadRequestResponse(w, "Error Can't Fit Query Result")
 			return nil, err
 		} else {
-			incomes = append(incomes, income)
+			if i != -1 {
+				if income.MonthName == tempMonth {
+					incomes[i].Income = incomes[i].Income + income.Income
+					incomes[i].SumBorrows = incomes[i].SumBorrows + income.SumBorrows
+				} else {
+					incomes = append(incomes, income)
+					tempMonth = income.MonthName
+					i++
+				}
+			} else {
+				incomes = append(incomes, income)
+				tempMonth = income.MonthName
+				i++
+			}
 		}
 	}
 	return incomes, nil

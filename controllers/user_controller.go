@@ -27,18 +27,18 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	password := encodePassword(r.Form.Get("password"))
 	userName := r.Form.Get("userName")
-	fmt.Println(password)
-	fmt.Println(userName)
+	// fmt.Println(password)
+	// fmt.Println(userName)
 
 	if password != "" && userName != "" {
-		query := "SELECT * FROM users WHERE password = ? AND username = ?"
+		query := "SELECT * FROM users WHERE password = ? AND userName = ?"
 
 		var user model.User
 
 		rows := db.QueryRow(query, password, userName)
 		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
-			sendBadRequestResponse(w, "Error Query")
-			log.Println(err)
+			fmt.Println(err)
+			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		}
 

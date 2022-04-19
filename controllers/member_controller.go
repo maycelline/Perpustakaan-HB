@@ -469,21 +469,18 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	num, _ := result.RowsAffected()
 
 	var member model.Member
-	var members []model.Member
-	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
-			sendBadRequestResponse(w, "Error Field Undefined")
-			return
-		} else {
-			members = append(members, member)
-		}
+
+	err = rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance)
+	if err != nil {
+		sendBadRequestResponse(w, "Error Field Undefined")
+		return
 	}
 
 	if errQuery == nil {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
-			sendSuccessResponse(w, "Update Success", members)
+			sendSuccessResponse(w, "Update Success", member)
 		}
 	} else {
 		sendBadRequestResponse(w, "Error Can Not Update")

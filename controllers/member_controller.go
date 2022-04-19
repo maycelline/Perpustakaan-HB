@@ -397,10 +397,16 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := getIdFromCookies(r)
+	userId, _, _, _, _, _, _, _, password, _ := getDataFromCookies(r)
 
+	currentPass := r.Form.Get("currentPass")
 	newPass := r.Form.Get("newPass")
 	confirmNewPass := r.Form.Get("confirmNewPass")
+
+	if password != currentPass {
+		sendBadRequestResponse(w, "Error Incorrect Password")
+		return
+	}
 
 	checkPass := checkPasswordValidation(newPass, w)
 	if !checkPass {
@@ -412,9 +418,9 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	password := encodePassword(newPass)
+	newPassword := encodePassword(newPass)
 
-	result, errQuery := db.Exec("UPDATE users SET password=? WHERE userId=?", password, userId)
+	result, errQuery := db.Exec("UPDATE users SET password=? WHERE userId=?", newPassword, userId)
 	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()
@@ -434,6 +440,7 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
+			generateMemberToken(w, member)
 			sendSuccessResponse(w, "Update Success", members)
 		}
 	} else {
@@ -459,14 +466,15 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	balance = balance + newBalance
 
 	result, errQuery := db.Exec("UPDATE members SET balance=? WHERE memberId=?", balance, userId)
-	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
+	row := db.QueryRow("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()
 
 	var member model.Member
 
-	err = rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance)
+	err = row.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance)
 	if err != nil {
+		log.Println(err)
 		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	}
@@ -475,6 +483,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
+			generateMemberToken(w, member)
 			sendSuccessResponse(w, "Update Success", member)
 		}
 	} else {
@@ -503,9 +512,9 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_, errQuery := db.Exec("DELETE FROM members WHERE userId=?", userId)
+	_, errQuery := db.Exec("DELETE FROM members WHERE memberId=?", userId)
 	if errQuery == nil {
-		result, errQuery := db.Exec("DELETE FROM users WHERE memberId=?", userId)
+		result, errQuery := db.Exec("DELETE FROM users WHERE userId=?", userId)
 		num, _ := result.RowsAffected()
 		if errQuery == nil {
 			if num == 0 {
@@ -571,7 +580,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 	if len(borrowings) != 0 {
 		sendSuccessResponse(w, "Get Success", borrowings)
 	} else {
-		sendBadRequestResponse(w, "You have no borrowing history")
+		sendBadRequestResponse(w, "Error You Have No Borrowing History")
 	}
 
 	db.Close()

@@ -20,6 +20,7 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
+		log.Println(err)
 		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
@@ -36,7 +37,8 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 
 		rows := db.QueryRow(query, password, userName)
 		if err := rows.Scan(&user.ID, &user.FullName, &user.UserName, &user.BirthDate, &user.PhoneNumber, &user.Email, &user.Address, &user.AdditionalAddress, &user.Password, &user.UserType); err != nil {
-			sendBadRequestResponse(w, "Error Field Undefined")
+			sendBadRequestResponse(w, "Error Query")
+			log.Println(err)
 			return
 		}
 
@@ -57,6 +59,7 @@ func CheckUserLogin(w http.ResponseWriter, r *http.Request) {
 				query = "SELECT branches.branchId, branches.branchName, branches.branchAddress FROM admins JOIN branches WHERE admins.adminId = ? AND admins.branchId = branches.branchId"
 				rows = db.QueryRow(query, admin.User.ID)
 				if err := rows.Scan(&admin.Branch.ID, &admin.Branch.Name, &admin.Branch.Address); err != nil {
+					log.Println(err)
 					return
 				}
 				generateAdminToken(w, admin)
@@ -79,6 +82,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
+		log.Println(err)
 		sendServerErrorResponse(w, "Internal Server Error")
 		return
 	}
@@ -199,12 +203,12 @@ func checkPasswordValidation(pass string, w http.ResponseWriter) bool {
 func checkUsernameValidation(username string, w http.ResponseWriter) bool {
 	regex, err := regexp2.Compile(`^(?=.*[a-zA-Z])(?=.*\d)([^\@$!%*?&/^\s]){4,16}$`, 0)
 	if err != nil {
-		sendBadRequestResponse(w, "Regex Not Correct")
+		sendBadRequestResponse(w, "Regex Not Correct") //ini perlu ?
 		return false
 	}
 	checkUname, err := regex.MatchString(username)
 	if err != nil {
-		sendBadRequestResponse(w, "Password Not Match Criteria")
+		sendBadRequestResponse(w, "Password Not Match Criteria") //ini perlu ?
 	}
 	return checkUname
 }
@@ -212,7 +216,7 @@ func checkUsernameValidation(username string, w http.ResponseWriter) bool {
 func checkMailValidation(email string, w http.ResponseWriter) bool {
 	_, err := mail.ParseAddress(email)
 	if err != nil {
-		sendBadRequestResponse(w, "Mail Not Correct")
+		sendBadRequestResponse(w, "Mail Not Correct") //ini perlu ?
 		return false
 	}
 	return true

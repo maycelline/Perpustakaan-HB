@@ -313,7 +313,7 @@ func ReturnBorrowing(w http.ResponseWriter, r *http.Request) {
 	var borrowId = make([]int, len(booksId))
 
 	for i, bookId := range booksId {
-		query := "SELECT b.stockId, d.borrowId, a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE a.bookId = ? AND e.memberId = ?"
+		query := "SELECT b.stockId, d.borrowId, a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE a.bookId = ? AND e.memberId = ? AND d.borrowState = 'BORROWED'"
 		row := db.QueryRow(query, bookId, memberId)
 		if err := row.Scan(&stocks[i], &borrowId[i], &book.ID, &book.CoverPath, &book.Title, &book.Author, &book.Genre, &book.Year, &book.Page, &book.RentPrice, &book.Stock, &book.BranchName); err != nil {
 			log.Println(err)
@@ -539,7 +539,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 
-	query := "SELECT e.borrowId, e.borrowDate, e.returnDate FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'RETURNED' AND  f.memberId = ?"
+	query := "SELECT e.borrowId, e.borrowDate, e.returnDate FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE (d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'RETURN_PROCESS' OR d.borrowState = 'RETURNED') AND  f.memberId = ? GROUP BY e.borrowId"
 
 	rows, err := db.Query(query, memberId)
 	if err != nil {
@@ -554,9 +554,10 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
-			query2 := "SELECT a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'FINISHED' AND  f.memberId = ?"
+			query2 := "SELECT a.bookId, a.coverPath, a.bookTitle, a.author, a.genre, a.year, a.page, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE (d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'RETURN_PROCESS' OR d.borrowState = 'FINISHED') AND  f.memberId = ? AND d.borrowId = ?"
 
-			rows2, err := db.Query(query2, memberId)
+			log.Println(query2)
+			rows2, err := db.Query(query2, memberId, borrowing.ID)
 			if err != nil {
 				sendNotFoundResponse(w, "Table Not Found")
 				return

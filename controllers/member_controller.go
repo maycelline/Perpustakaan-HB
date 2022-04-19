@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -38,7 +37,7 @@ func GetMemberCart(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 
-	query := "SELECT d.cartId, a.bookTitle, a.author, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN carts d ON b.stockId = d.stockId JOIN members e ON d.memberId = e.memberId WHERE e.memberId = ? ORDER BY d.cartId ASC"
+	query := "SELECT d.cartId, a.bookId, a.bookTitle, a.author, a.rentPrice, b.stock, c.branchName FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN carts d ON b.stockId = d.stockId JOIN members e ON d.memberId = e.memberId WHERE e.memberId = ? ORDER BY d.cartId ASC"
 
 	rows, err := db.Query(query, memberId)
 	if err != nil {
@@ -49,7 +48,7 @@ func GetMemberCart(w http.ResponseWriter, r *http.Request) {
 	var cart model.Cart
 	var carts []model.Cart
 	for rows.Next() {
-		if err := rows.Scan(&cart.ID, &cart.Book.Title, &cart.Book.Author, &cart.Book.RentPrice, &cart.Book.Stock, &cart.Book.BranchName); err != nil {
+		if err := rows.Scan(&cart.ID, &cart.Book.ID, &cart.Book.Title, &cart.Book.Author, &cart.Book.RentPrice, &cart.Book.Stock, &cart.Book.BranchName); err != nil {
 			sendBadRequestResponse(w, "Error Field Undefined")
 			return
 		} else {
@@ -344,58 +343,47 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, fullName, userName, birthDate, phone, email, address, additionalAddress, _, _ := getDataFromCookies(r)
+	userId := getIdFromCookies(r)
 
-	if fullName != r.Form.Get("fullName") {
-		fullName = r.Form.Get("fullName")
-	} else if userName != r.Form.Get("userName") {
-		userName = r.Form.Get("userName")
-		checkUname := checkUsernameValidation(userName, w)
-		if !checkUname {
-			return
-		}
-	} else if time.Time.String(birthDate) != r.Form.Get("birthDate") {
-		birthDate, _ = time.Parse("2020-01-01", r.Form.Get("birthDate"))
-	} else if phone != r.Form.Get("phone") {
-		phone = r.Form.Get("phone")
-	} else if email != r.Form.Get("email") {
-		email = r.Form.Get("email")
-		checkMail := checkMailValidation(email, w)
-		if !checkMail {
-			return
-		}
-	} else if address != r.Form.Get("address") {
-		address = r.Form.Get("address")
-	} else if additionalAddress != r.Form.Get("additionalAddress") {
-		additionalAddress = r.Form.Get("additionalAddress")
+	fullName := r.Form.Get("fullName")
+	userName := r.Form.Get("userName")
+	checkUname := checkUsernameValidation(userName, w)
+	log.Println("username: ", checkUname)
+	if !checkUname {
+		return
 	}
+	birthDate := r.Form.Get("birthDate")
+	phone := r.Form.Get("phone")
+	email := r.Form.Get("email")
+	checkMail := checkMailValidation(email, w)
+	log.Println("username: ", checkMail)
+	if !checkMail {
+		return
+	}
+	address := r.Form.Get("address")
+	additionalAddress := r.Form.Get("additionalAddress")
 
-	result, errQuery := db.Exec("UPDATE users SET fullName=?, userName=?, birthDate=?, phone=?, email=?, address=?, additionalAddress=?", fullName, userName, birthDate, phone, email, address, additionalAddress)
-	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
+	result, errQuery := db.Exec("UPDATE users SET fullName=?, userName=?, birthDate=?, phoneNumber=?, email=?, address=?, additionalAddress=? WHERE userId=?", fullName, userName, birthDate, phone, email, address, additionalAddress, userId)
+	row := db.QueryRow("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()
 
 	var member model.Member
-	var members []model.Member
-	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
-			sendBadRequestResponse(w, "Error Field Undefined")
-			return
-		} else {
-			members = append(members, member)
-		}
-	}
-
-	if errQuery == nil {
-		if num == 0 {
-			sendBadRequestResponse(w, "Error 0 Rows Affected")
-		} else {
-			sendSuccessResponse(w, "Update Success", members)
-		}
+	if err := row.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
+		sendBadRequestResponse(w, "Error Field Undefined")
+		return
 	} else {
-		sendBadRequestResponse(w, "Error Can Not Update")
+		if errQuery == nil {
+			if num == 0 {
+				sendBadRequestResponse(w, "Error 0 Rows Affected")
+			} else {
+				generateMemberToken(w, member)
+				sendSuccessResponse(w, "Update Success", member)
+			}
+		} else {
+			sendBadRequestResponse(w, "Error Can Not Update")
+		}
 	}
-
 	db.Close()
 }
 
@@ -411,15 +399,28 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 
 	userId, _, _, _, _, _, _, _, password, _ := getDataFromCookies(r)
 
-	checkPass := checkPasswordValidation(password, w)
+	currentPass := r.Form.Get("currentPass")
+	newPass := r.Form.Get("newPass")
+	confirmNewPass := r.Form.Get("confirmNewPass")
 
-	if !checkPass {
+	if password != currentPass {
+		sendBadRequestResponse(w, "Error Incorrect Password")
 		return
 	}
 
-	password = encodePassword(password)
+	checkPass := checkPasswordValidation(newPass, w)
+	if !checkPass {
+		return
+	} else {
+		checkPass2 := checkPasswordValidation(confirmNewPass, w)
+		if !checkPass2 {
+			return
+		}
+	}
 
-	result, errQuery := db.Exec("UPDATE users SET password=? WHERE memberId=?", password, userId)
+	newPassword := encodePassword(newPass)
+
+	result, errQuery := db.Exec("UPDATE users SET password=? WHERE userId=?", newPassword, userId)
 	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()
@@ -439,6 +440,7 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
+			generateMemberToken(w, member)
 			sendSuccessResponse(w, "Update Success", members)
 		}
 	} else {
@@ -464,14 +466,15 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	balance = balance + newBalance
 
 	result, errQuery := db.Exec("UPDATE members SET balance=? WHERE memberId=?", balance, userId)
-	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
+	row := db.QueryRow("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()
 
 	var member model.Member
 
-	err = rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance)
+	err = row.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance)
 	if err != nil {
+		log.Println(err)
 		sendBadRequestResponse(w, "Error Field Undefined")
 		return
 	}
@@ -480,6 +483,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 		if num == 0 {
 			sendBadRequestResponse(w, "Error 0 Rows Affected")
 		} else {
+			generateMemberToken(w, member)
 			sendSuccessResponse(w, "Update Success", member)
 		}
 	} else {
@@ -508,9 +512,9 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_, errQuery := db.Exec("DELETE FROM members WHERE userId=?", userId)
+	_, errQuery := db.Exec("DELETE FROM members WHERE memberId=?", userId)
 	if errQuery == nil {
-		result, errQuery := db.Exec("DELETE FROM users WHERE memberId=?", userId)
+		result, errQuery := db.Exec("DELETE FROM users WHERE userId=?", userId)
 		num, _ := result.RowsAffected()
 		if errQuery == nil {
 			if num == 0 {
@@ -576,7 +580,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 	if len(borrowings) != 0 {
 		sendSuccessResponse(w, "Get Success", borrowings)
 	} else {
-		sendBadRequestResponse(w, "You have no borrowing history")
+		sendBadRequestResponse(w, "Error You Have No Borrowing History")
 	}
 
 	db.Close()

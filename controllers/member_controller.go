@@ -403,7 +403,7 @@ func EditUserPassword(w http.ResponseWriter, r *http.Request) {
 	newPass := r.Form.Get("newPass")
 	confirmNewPass := r.Form.Get("confirmNewPass")
 
-	if password != currentPass {
+	if password != encodePassword(currentPass) {
 		sendBadRequestResponse(w, "Error Incorrect Password")
 		return
 	}

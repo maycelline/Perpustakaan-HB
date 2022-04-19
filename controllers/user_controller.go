@@ -98,6 +98,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 	var checkPass = checkPasswordValidation(password, w)
 	var checkUname = checkUsernameValidation(userName, w)
 	var checkMail = checkMailValidation(email, w)
+	var memberId int
 	if password == confirmPass && checkPass && checkUname && checkMail {
 		if fullName != "" && phone != "" && address != "" {
 			result1, errQuery1 := db.Exec("INSERT INTO users(fullName, userName, birthDate, phoneNumber, email, address, additionalAddress, password, userType) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -111,6 +112,8 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 				encodePassword(password),
 				"MEMBER",
 			)
+			// memberId, _ = result1.LastInsertId()
+			// memberId,_ = strconv.Atoi(memberid)
 			if errQuery1 != nil {
 				log.Println(errQuery1)
 				sendBadRequestResponse(w, "Error Can Not Register, error query 1")
@@ -118,6 +121,7 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 			}
 
 			tempId, _ := result1.LastInsertId()
+			memberId = int(tempId)
 			_, errQuery2 := db.Exec("INSERT INTO members(memberId, balance) values (?,?)", tempId, 0)
 
 			if errQuery2 != nil {
@@ -133,7 +137,11 @@ func CreateUserRegister(w http.ResponseWriter, r *http.Request) {
 		sendBadRequestResponse(w, "Your input not valid")
 		return
 	}
+	var member model.Member
 
+	member.User = user
+	member.User.ID = memberId
+	generateMemberToken(w, member)
 	sendSuccessResponse(w, "Register Success", nil)
 	go SendRegisterEmail(user)
 	SetEmailWeeklyScheduler(email)

@@ -129,8 +129,6 @@ func RemoveBookFromCart(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	branchName := vars["branch_name"]
 
-	log.Println(branchName)
-
 	var stocks = make([]int, len(booksId))
 
 	for i, bookId := range booksId {
@@ -210,7 +208,6 @@ func CheckoutBorrowing(w http.ResponseWriter, r *http.Request) {
 		}
 
 		query2 := "SELECT b.stockId, b.branchId FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN carts d ON b.stockId = d.stockId JOIN members e ON d.memberId = e.memberId WHERE a.bookId = ? AND e.memberId = ?"
-		log.Println(query2)
 		row2 := db.QueryRow(query2, bookId, memberId)
 		if err := row2.Scan(&stocks[i], &branches[i]); err != nil {
 			log.Println(err)
@@ -220,7 +217,6 @@ func CheckoutBorrowing(w http.ResponseWriter, r *http.Request) {
 
 		totalBorrowPrice = totalBorrowPrice + books[i].RentPrice
 
-		log.Println("Stock: ", books[i].Stock)
 		if books[i].Stock <= 0 {
 			sendBadRequestResponse(w, "Error Stocks Unavailable")
 			return
@@ -468,7 +464,7 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	balance = balance + newBalance
 
 	result, errQuery := db.Exec("UPDATE members SET balance=? WHERE memberId=?", balance, userId)
-	rows := db.QueryRow("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
+	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
 
 	num, _ := result.RowsAffected()
 
@@ -512,9 +508,9 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_, errQuery := db.Exec("DELETE FROM members WHERE id=?", userId)
+	_, errQuery := db.Exec("DELETE FROM members WHERE userId=?", userId)
 	if errQuery == nil {
-		result, errQuery := db.Exec("DELETE FROM users WHERE id=?", userId)
+		result, errQuery := db.Exec("DELETE FROM users WHERE memberId=?", userId)
 		num, _ := result.RowsAffected()
 		if errQuery == nil {
 			if num == 0 {
@@ -539,7 +535,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 
 	memberId := getIdFromCookies(r)
 
-	query := "SELECT e.borrowId, e.borrowDate, e.returnDate FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'FINISHED' AND  f.memberId = ?"
+	query := "SELECT e.borrowId, e.borrowDate, e.returnDate FROM books a JOIN stocks b ON a.bookId = b.bookId JOIN branches c ON b.branchId = c.branchId JOIN borrowslist d ON b.stockId = d.stockId JOIN borrows e ON d.borrowId = e.borrowId JOIN members f ON e.memberId = f.memberId WHERE d.borrowState = 'BORROWED' OR d.borrowState = 'OVERDUE' OR d.borrowState = 'RETURNED' AND  f.memberId = ?"
 
 	rows, err := db.Query(query, memberId)
 	if err != nil {
@@ -580,7 +576,7 @@ func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 	if len(borrowings) != 0 {
 		sendSuccessResponse(w, "Get Success", borrowings)
 	} else {
-		sendBadRequestResponse(w, "Error Array Size Not Correct")
+		sendBadRequestResponse(w, "You have no borrowing history")
 	}
 
 	db.Close()

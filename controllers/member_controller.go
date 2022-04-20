@@ -493,46 +493,6 @@ func TopupUserBalance(w http.ResponseWriter, r *http.Request) {
 	db.Close()
 }
 
-func DeleteAccount(w http.ResponseWriter, r *http.Request) {
-	db := Connect()
-	defer db.Close()
-
-	userId := getIdFromCookies(r)
-
-	rows, _ := db.Query("SELECT userId, fullName, userName, birthDate, phoneNumber, email, address, password, balance FROM users JOIN members ON users.userId = members.memberId WHERE users.userId=?", userId)
-
-	var member model.Member
-	var members []model.Member
-	for rows.Next() {
-		if err := rows.Scan(&member.User.ID, &member.User.FullName, &member.User.UserName, &member.User.BirthDate, &member.User.PhoneNumber, &member.User.Email, &member.User.Address, &member.User.Password, &member.Balance); err != nil {
-			sendBadRequestResponse(w, "Error Field Undefined")
-			return
-		} else {
-			members = append(members, member)
-		}
-	}
-
-	_, errQuery := db.Exec("DELETE FROM members WHERE memberId=?", userId)
-	if errQuery == nil {
-		result, errQuery := db.Exec("DELETE FROM users WHERE userId=?", userId)
-		num, _ := result.RowsAffected()
-		if errQuery == nil {
-			if num == 0 {
-				sendBadRequestResponse(w, "Error 0 Rows Affected")
-			} else {
-				resetUserToken(w)
-				sendSuccessResponse(w, "Delete Success", members)
-			}
-		} else {
-			sendSuccessResponse(w, "Delete Success", members)
-		}
-	} else {
-		sendBadRequestResponse(w, "Error Can Not Delete")
-	}
-
-	db.Close()
-}
-
 func GetMemberHistory(w http.ResponseWriter, r *http.Request) {
 	db := Connect()
 	defer db.Close()
